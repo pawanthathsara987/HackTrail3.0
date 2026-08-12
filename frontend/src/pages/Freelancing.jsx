@@ -346,7 +346,13 @@ const Freelancing = ({ user }) => {
         }),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error(`Server returned invalid response (${response.status} ${response.statusText}).`);
+      }
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to publish gig.");

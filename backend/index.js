@@ -10,7 +10,6 @@ import profileRoutes from "./routes/profileRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import trainingRoutes from "./routes/trainingRoutes.js";
 import freelanceRoutes from "./routes/freelanceRoutes.js";
-import { seedDatabase } from "./config/seed.js";
 
 dotenv.config();
 
@@ -18,7 +17,8 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Database
 connectDB();
@@ -32,24 +32,19 @@ app.use("/api/training", trainingRoutes);
 app.use("/api/training-programs", trainingRoutes);
 app.use("/api/freelance-projects", freelanceRoutes);
 
-// Sync Models & Seed Initial Data
+// Sync Models
 sequelize
   .sync()
-  .then(async () => {
+  .then(() => {
     console.log("✅ Database synchronized");
-    await seedDatabase();
   })
   .catch((error) => {
     console.log(error.message);
   });
 
-
 // Server
 const PORT = process.env.PORT || 3002;
 
-
-app.listen(PORT,()=>{
-
-    console.log(`🚀 Server running on port ${PORT}`);
-
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
