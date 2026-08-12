@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
+import Header from './components/Header';
+import Footer from './components/Footer';
 import Home from './pages/home/Home';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
@@ -15,6 +17,7 @@ import TrainingDetails from './pages/TrainingDetails';
 import StudentDashboard from './pages/dashboards/StudentDashboard';
 import JobPosterDashboard from './pages/dashboards/JobPosterDashboard';
 import ClientDashboard from './pages/dashboards/ClientDashboard';
+
 
 function App() {
   return (

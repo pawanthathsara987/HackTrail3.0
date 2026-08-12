@@ -15,7 +15,14 @@ import {
   Sparkles,
   PlusCircle,
   TrendingUp,
+  Trash2,
+  Eye,
+  X,
+  Clock,
+  DollarSign,
+  Calendar,
 } from "lucide-react";
+
 
 const JobPosterDashboard = () => {
   const navigate = useNavigate();
@@ -38,9 +45,46 @@ const JobPosterDashboard = () => {
     businessLocation: "",
   });
 
+  const [myJobs, setMyJobs] = useState([]);
+  const [showJobModal, setShowJobModal] = useState(false);
+  const [isCreatingJob, setIsCreatingJob] = useState(false);
+  const [jobModalData, setJobModalData] = useState({
+    title: "",
+    category: "Web Development",
+    location: "",
+    jobType: "Part-Time",
+    workingHours: "10-15 hrs/week",
+    salaryMin: "",
+    salaryMax: "",
+    salaryType: "Monthly",
+    description: "",
+    requirements: "",
+    responsibilities: "",
+    benefits: "",
+    deadline: "",
+  });
+
   useEffect(() => {
     fetchProfile();
+    fetchMyJobs();
   }, []);
+
+  const fetchMyJobs = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await fetch("/api/jobs/my-jobs", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMyJobs(data.jobs || []);
+      }
+    } catch (err) {
+      console.error("Error loading posted jobs:", err);
+    }
+  };
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
@@ -86,6 +130,108 @@ const JobPosterDashboard = () => {
       setLoading(false);
     }
   };
+
+  const handleCreateJob = async (e) => {
+    e.preventDefault();
+    setIsCreatingJob(true);
+    setMessage({ type: "", text: "" });
+
+    const token = localStorage.getItem("token");
+    const organizationName =
+      userData?.jobPosterProfile?.organizationName ||
+      userData?.fullName ||
+      "Organization";
+
+    const payload = {
+      title: jobModalData.title,
+      companyName: organizationName,
+      companyLogo: userData?.profilePhoto || null,
+      category: jobModalData.category,
+      location: jobModalData.location,
+      jobType: jobModalData.jobType,
+      workingHours: jobModalData.workingHours,
+      salaryMin: jobModalData.salaryMin ? Number(jobModalData.salaryMin) : null,
+      salaryMax: jobModalData.salaryMax ? Number(jobModalData.salaryMax) : null,
+      salaryType: jobModalData.salaryType,
+      salary: jobModalData.salaryMin && jobModalData.salaryMax
+        ? `Rs. ${Number(jobModalData.salaryMin).toLocaleString()} - Rs. ${Number(jobModalData.salaryMax).toLocaleString()} / ${jobModalData.salaryType.toLowerCase()}`
+        : null,
+      description: jobModalData.description,
+      requirements: jobModalData.requirements
+        ? jobModalData.requirements.split("\n").map((item) => item.trim()).filter(Boolean)
+        : [],
+      responsibilities: jobModalData.responsibilities
+        ? jobModalData.responsibilities.split("\n").map((item) => item.trim()).filter(Boolean)
+        : [],
+      benefits: jobModalData.benefits
+        ? jobModalData.benefits.split("\n").map((item) => item.trim()).filter(Boolean)
+        : [],
+      deadline: jobModalData.deadline || null,
+    };
+
+    try {
+      const response = await fetch("/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to post job.");
+      }
+
+      setMessage({ type: "success", text: "New Job posted successfully!" });
+      setShowJobModal(false);
+      setJobModalData({
+        title: "",
+        category: "Web Development",
+        location: "",
+        jobType: "Part-Time",
+        workingHours: "10-15 hrs/week",
+        salaryMin: "",
+        salaryMax: "",
+        salaryType: "Monthly",
+        description: "",
+        requirements: "",
+        responsibilities: "",
+        benefits: "",
+        deadline: "",
+      });
+      fetchMyJobs();
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: "error", text: err.message });
+    } finally {
+      setIsCreatingJob(false);
+    }
+  };
+
+  const handleDeleteJob = async (jobId) => {
+    if (!window.confirm("Are you sure you want to delete this job posting?")) return;
+
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to delete job.");
+      }
+      setMessage({ type: "success", text: "Job posting deleted successfully." });
+      fetchMyJobs();
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: "error", text: err.message });
+    }
+  };
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -362,22 +508,97 @@ const JobPosterDashboard = () => {
                   <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
                     <Briefcase className="text-indigo-600" size={20} />
                     Posted Jobs & Opportunities
+                    {myJobs.length > 0 && (
+                      <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700">
+                        {myJobs.length}
+                      </span>
+                    )}
                   </h3>
 
-                  <button className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition">
+                  <button
+                    onClick={() => setShowJobModal(true)}
+                    className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition"
+                  >
                     <PlusCircle size={15} />
                     Post New Job
                   </button>
                 </div>
 
-                <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center border border-dashed border-slate-200">
-                  <Users size={36} className="mx-auto text-slate-400" />
-                  <h4 className="mt-3 font-bold text-slate-800">Start Recruiting Students</h4>
-                  <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-                    Post flexible part-time jobs, internships, and entry-level positions to connect with top student talent.
-                  </p>
-                </div>
+                {myJobs.length === 0 ? (
+                  <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center border border-dashed border-slate-200">
+                    <Users size={36} className="mx-auto text-slate-400" />
+                    <h4 className="mt-3 font-bold text-slate-800">Start Recruiting Students</h4>
+                    <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                      Post flexible part-time jobs, internships, and entry-level positions to connect with top student talent.
+                    </p>
+                    <button
+                      onClick={() => setShowJobModal(true)}
+                      className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-indigo-700 transition"
+                    >
+                      <PlusCircle size={14} />
+                      Post Your First Job
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-4">
+                    {myJobs.map((j) => (
+                      <div
+                        key={j.id}
+                        className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-white hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-slate-900">{j.title}</h4>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                j.status === "active"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-slate-200 text-slate-700"
+                              }`}
+                            >
+                              {j.status}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <Briefcase size={12} />
+                              {j.category}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MapPin size={12} />
+                              {j.location}
+                            </span>
+                            {j.salary && (
+                              <span className="flex items-center gap-1 text-indigo-600 font-semibold">
+                                <DollarSign size={12} />
+                                {j.salary}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/part-time-jobs/${j.id}`}
+                            className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                          >
+                            <Eye size={14} />
+                            View
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteJob(j.id)}
+                            className="flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+
             </div>
 
             {/* Right Column: Contact Info */}
@@ -625,9 +846,241 @@ const JobPosterDashboard = () => {
             </div>
           </form>
         )}
+
+
+        {/* POST NEW JOB MODAL */}
+        {showJobModal && (
+
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-4 backdrop-blur-sm">
+            <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                    <PlusCircle size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Post a Part-Time Job</h3>
+                    <p className="text-xs text-slate-500">Fill in the details to publish a new job for students</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowJobModal(false)}
+                  className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateJob} className="mt-6 space-y-6">
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Job Title *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Junior Web Developer, Campus Brand Ambassador"
+                      value={jobModalData.title}
+                      onChange={(e) => setJobModalData({ ...jobModalData, title: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Category *
+                    </label>
+                    <select
+                      value={jobModalData.category}
+                      onChange={(e) => setJobModalData({ ...jobModalData, category: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    >
+                      <option value="Web Development">Web Development</option>
+                      <option value="Digital Marketing">Digital Marketing</option>
+                      <option value="Graphic Design">Graphic Design</option>
+                      <option value="Data & AI">Data & AI</option>
+                      <option value="Content Writing">Content Writing</option>
+                      <option value="Customer Support">Customer Support</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Job Type *
+                    </label>
+                    <select
+                      value={jobModalData.jobType}
+                      onChange={(e) => setJobModalData({ ...jobModalData, jobType: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    >
+                      <option value="Part-Time">Part-Time</option>
+                      <option value="Remote">Remote</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="On-site">On-site</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Location *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Colombo / Remote, Kandy"
+                      value={jobModalData.location}
+                      onChange={(e) => setJobModalData({ ...jobModalData, location: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Working Hours
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 10-15 hrs/week"
+                      value={jobModalData.workingHours}
+                      onChange={(e) => setJobModalData({ ...jobModalData, workingHours: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Salary Min (LKR)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 20000"
+                      value={jobModalData.salaryMin}
+                      onChange={(e) => setJobModalData({ ...jobModalData, salaryMin: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Salary Max (LKR)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 35000"
+                      value={jobModalData.salaryMax}
+                      onChange={(e) => setJobModalData({ ...jobModalData, salaryMax: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Salary Frequency
+                    </label>
+                    <select
+                      value={jobModalData.salaryType}
+                      onChange={(e) => setJobModalData({ ...jobModalData, salaryType: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    >
+                      <option value="Monthly">Monthly</option>
+                      <option value="Hourly">Hourly</option>
+                      <option value="Weekly">Weekly</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Application Deadline
+                    </label>
+                    <input
+                      type="date"
+                      value={jobModalData.deadline}
+                      onChange={(e) => setJobModalData({ ...jobModalData, deadline: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Job Description *
+                    </label>
+                    <textarea
+                      rows={4}
+                      required
+                      placeholder="Describe the job responsibilities, role expectations, and company culture..."
+                      value={jobModalData.description}
+                      onChange={(e) => setJobModalData({ ...jobModalData, description: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Requirements (one per line)
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="Enrolled student&#10;Basic HTML & CSS&#10;Good communication skills"
+                      value={jobModalData.requirements}
+                      onChange={(e) => setJobModalData({ ...jobModalData, requirements: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Responsibilities (one per line)
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="Develop web pages&#10;Collaborate with team&#10;Fix design bugs"
+                      value={jobModalData.responsibilities}
+                      onChange={(e) => setJobModalData({ ...jobModalData, responsibilities: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Benefits (one per line)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Flexible hours&#10;Certificate of completion&#10;Remote work option"
+                      value={jobModalData.benefits}
+                      onChange={(e) => setJobModalData({ ...jobModalData, benefits: e.target.value })}
+                      className="mt-2 w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowJobModal(false)}
+                    className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreatingJob}
+                    className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-indigo-700 disabled:opacity-50 transition"
+                  >
+                    <PlusCircle size={16} />
+                    {isCreatingJob ? "Publishing..." : "Publish Job"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 };
 
 export default JobPosterDashboard;
+

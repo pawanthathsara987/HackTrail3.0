@@ -3,6 +3,8 @@ import {
   getJobs,
   getJobById,
   createJob,
+  getMyJobs,
+  deleteJob,
   applyForJob,
   toggleBookmark,
 } from "../controllers/jobController.js";
@@ -21,9 +23,14 @@ const optionalAuth = (req, res, next) => {
 };
 
 router.get("/", getJobs);
+router.get("/my-jobs", protect, getMyJobs);
 router.get("/:id", optionalAuth, getJobById);
 router.post("/", protect, createJob);
+router.delete("/:id", protect, deleteJob);
 router.post("/:id/apply", protect, applyForJob);
 router.post("/:id/bookmark", protect, toggleBookmark);
+router.post("/:id/save", protect, toggleBookmark);
+router.delete("/:id/save", protect, toggleBookmark);
 
 export default router;
+
