@@ -20,6 +20,8 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col font-sans antialiased">
+        <Header />
+
         <main className="flex-grow">
           <Routes>
             {/* Home Route */}
@@ -37,14 +39,13 @@ function App() {
             <Route path="/part-time-jobs" element={<PartTimeJobs />} />
             <Route path="/part-time-jobs/:id" element={<PartTimeJobDetails />} />
 
-            {/* Freelancing Routes */}
-            <Route path="/freelance" element={<Freelancing />} />
-            <Route path="/freelancing" element={<Freelancing />} />
-            <Route path="/freelance/details" element={<FreelanceProjectDetails />} />
-
             {/* Training Routes */}
             <Route path="/training" element={<Training />} />
             <Route path="/training/:id" element={<TrainingDetails />} />
+
+            {/* Freelancing Routes */}
+            <Route path="/freelancing" element={<Freelancing />} />
+            <Route path="/freelancing/:id" element={<FreelanceProjectDetails />} />
 
             {/* Role Profile & Dashboard Routes */}
             <Route path="/student/dashboard" element={<StudentDashboard />} />
@@ -55,6 +56,8 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+
+        <Footer />
       </div>
     </Router>
   );

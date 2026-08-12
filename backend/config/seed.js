@@ -1,0 +1,187 @@
+import { Job, TrainingProgram, FreelanceProject } from "../models/index.js";
+
+export const seedDatabase = async () => {
+  try {
+    const jobCount = await Job.count();
+    if (jobCount === 0) {
+      await Job.bulkCreate([
+        {
+          title: "Part-Time Campus Brand Ambassador",
+          companyName: "TechCorp Global",
+          companyLogo: "https://images.unsplash.com/photo-1549923746-c502d488b3ea?w=150",
+          category: "Digital Marketing",
+          location: "Colombo / Remote",
+          jobType: "Part-Time",
+          workingHours: "10-15 hrs/week",
+          salary: "Rs. 25,000 / month",
+          salaryMin: 20000,
+          salaryMax: 30000,
+          salaryType: "Monthly",
+          description: "Represent TechCorp on campus, organize student developer events, and promote upcoming tech bootcamps.",
+          requirements: ["Enrolled student", "Strong communication skills", "Active on social media"],
+          responsibilities: ["Host campus tech meetups", "Share event announcements", "Collect student feedback"],
+          benefits: ["Flexible working hours", "Certificate of accomplishment", "Performance bonus"],
+          deadline: "2026-09-30",
+          status: "active",
+        },
+        {
+          title: "Junior Web Developer (Part-Time)",
+          companyName: "WebStudio Lanka",
+          companyLogo: "https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150",
+          category: "Web Development",
+          location: "Kandy / Remote",
+          jobType: "Remote",
+          workingHours: "15-20 hrs/week",
+          salary: "Rs. 35,000 / month",
+          salaryMin: 30000,
+          salaryMax: 40000,
+          salaryType: "Monthly",
+          description: "Help build and maintain responsive frontend interfaces for client web applications using React and Tailwind CSS.",
+          requirements: ["Basic HTML, CSS, JavaScript", "Familiarity with React", "Good problem-solving skills"],
+          responsibilities: ["Build modern UI components", "Fix layout bugs", "Integrate REST APIs"],
+          benefits: ["100% Remote work", "Mentorship from senior devs", "Project incentives"],
+          deadline: "2026-10-15",
+          status: "active",
+        },
+        {
+          title: "Social Media & Content Assistant",
+          companyName: "Creative Pulse Agency",
+          companyLogo: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=150",
+          category: "Graphic Design",
+          location: "Colombo",
+          jobType: "Hybrid",
+          workingHours: "12 hrs/week",
+          salary: "Rs. 22,000 / month",
+          salaryMin: 20000,
+          salaryMax: 25000,
+          salaryType: "Monthly",
+          description: "Design social media graphics, craft engaging captions, and manage posting schedules for clients.",
+          requirements: ["Canva or Photoshop skills", "Good written English", "Eye for visual design"],
+          responsibilities: ["Create weekly social media banners", "Schedule posts", "Track post engagement"],
+          benefits: ["Creative freedom", "Flexible schedule"],
+          deadline: "2026-09-20",
+          status: "active",
+        },
+      ]);
+      console.log("🌱 Seeded initial Part-Time Jobs!");
+    }
+
+    const trainingCount = await TrainingProgram.count();
+    if (trainingCount === 0) {
+      await TrainingProgram.bulkCreate([
+        {
+          title: "Full-Stack Web Development Bootcamp",
+          provider: "DevAcademy",
+          providerLogo: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=150",
+          category: "Web Development",
+          skillLevel: "Beginner",
+          trainingType: "Online",
+          duration: "12 Weeks",
+          durationWeeks: 12,
+          price: 0,
+          description: "Master modern web development from scratch with HTML, CSS, JavaScript, React, Node.js, and Express.",
+          curriculum: ["HTML5 & Modern CSS Layouts", "JavaScript Essentials & DOM", "React.js Framework", "Node.js & Express REST APIs", "Database Integration"],
+          image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80",
+          enrolledCount: 1420,
+          rating: 4.9,
+          reviewsCount: 320,
+          verified: true,
+        },
+        {
+          title: "UI/UX & Graphic Design Fundamentals",
+          provider: "DesignHub Studio",
+          providerLogo: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=150",
+          category: "Graphic Design",
+          skillLevel: "Beginner",
+          trainingType: "Online",
+          duration: "6 Weeks",
+          durationWeeks: 6,
+          price: 0,
+          description: "Learn essential design principles, color theory, typography, Figma UI prototyping, and Photoshop graphics creation.",
+          curriculum: ["Design Principles & Typography", "Figma Wireframing & Prototyping", "Photoshop & Illustrator Graphics", "Portfolio Project"],
+          image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=900&q=80",
+          enrolledCount: 892,
+          rating: 4.7,
+          reviewsCount: 187,
+          verified: true,
+        },
+        {
+          title: "Digital Marketing & SEO Mastery",
+          provider: "MarketEdge Institute",
+          providerLogo: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=150",
+          category: "Digital Marketing",
+          skillLevel: "Intermediate",
+          trainingType: "Hybrid",
+          duration: "8 Weeks",
+          durationWeeks: 8,
+          price: 1999,
+          description: "Learn Search Engine Optimization, Google Analytics, social media ads management, and email campaign strategy.",
+          curriculum: ["SEO Strategy & Keyword Research", "Google Ads & Social Media Marketing", "Content Strategy & Analytics"],
+          image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=900&q=80",
+          enrolledCount: 1102,
+          rating: 4.6,
+          reviewsCount: 142,
+          verified: true,
+        },
+      ]);
+      console.log("🌱 Seeded initial Training Programs!");
+    }
+
+    const projectCount = await FreelanceProject.count();
+    if (projectCount === 0) {
+      await FreelanceProject.bulkCreate([
+        {
+          title: "E-Commerce Website Redesign in React",
+          clientName: "Alpha Retail Solutions",
+          clientRating: 4.9,
+          clientLocation: "Colombo",
+          category: "Web Development",
+          projectType: "Fixed Price",
+          budget: "$500 - $1,000",
+          budgetMin: 500,
+          budgetMax: 1000,
+          deadline: "3 Weeks",
+          description: "Looking for a talented frontend freelancer to redesign our existing online store into a clean, modern React app.",
+          skillsRequired: ["React", "Tailwind CSS", "REST API", "UI Design"],
+          proposalsCount: 5,
+          status: "open",
+        },
+        {
+          title: "Mobile App UI Design in Figma",
+          clientName: "FitTrack Tech",
+          clientRating: 5.0,
+          clientLocation: "Remote",
+          category: "Graphic Design",
+          projectType: "Fixed Price",
+          budget: "$300 - $600",
+          budgetMin: 300,
+          budgetMax: 600,
+          deadline: "2 Weeks",
+          description: "Design 15 sleek mobile app screens for a fitness tracking application. High-fidelity Figma file required.",
+          skillsRequired: ["Figma", "UI/UX Design", "Mobile App Design"],
+          proposalsCount: 8,
+          status: "open",
+        },
+        {
+          title: "Python Data Scraping & CSV Export",
+          clientName: "DataMetrics Labs",
+          clientRating: 4.8,
+          clientLocation: "Remote",
+          category: "Data & AI",
+          projectType: "Fixed Price",
+          budget: "$200 - $400",
+          budgetMin: 200,
+          budgetMax: 400,
+          deadline: "1 Week",
+          description: "Need a Python developer to build a web scraper for public business directory listings and export structured CSV data.",
+          skillsRequired: ["Python", "BeautifulSoup", "Scrapy", "Data Extraction"],
+          proposalsCount: 4,
+          status: "open",
+        },
+      ]);
+      console.log("🌱 Seeded initial Freelance Projects!");
+    }
+  } catch (err) {
+    console.error("Seeding error:", err);
+  }
+};

@@ -7,6 +7,10 @@ import "./models/index.js";
 import authRoutes from "./routes/authRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
+import trainingRoutes from "./routes/trainingRoutes.js";
+import freelanceRoutes from "./routes/freelanceRoutes.js";
+import { seedDatabase } from "./config/seed.js";
 
 dotenv.config();
 
@@ -23,15 +27,21 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/training", trainingRoutes);
+app.use("/api/training-programs", trainingRoutes);
+app.use("/api/freelance-projects", freelanceRoutes);
 
-// Sync Models
-sequelize.sync()
-.then(()=>{
+// Sync Models & Seed Initial Data
+sequelize
+  .sync()
+  .then(async () => {
     console.log("✅ Database synchronized");
-})
-.catch((error)=>{
+    await seedDatabase();
+  })
+  .catch((error) => {
     console.log(error.message);
-});
+  });
 
 
 // Server

@@ -1,134 +1,115 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import {
-  GraduationCap,
-  Mail,
-  Phone,
-  MapPin,
-  Heart,
-} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Target, Heart } from "lucide-react";
 
 const Footer = () => {
+  const location = useLocation();
   const currentYear = new Date().getFullYear();
 
+  // Hide global footer on dashboard views or full-screen auth pages if needed
+  if (
+    location.pathname.startsWith("/student/dashboard") ||
+    location.pathname.startsWith("/job-poster/dashboard") ||
+    location.pathname.startsWith("/client/dashboard")
+  ) {
+    return null;
+  }
+
   return (
-    <footer className="bg-slate-950 text-slate-400 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-
+    <footer className="border-t border-slate-100 bg-white">
+      <div className="mx-auto max-w-7xl px-5 py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
-          <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md">
-                <GraduationCap className="w-5 h-5" />
+          <div>
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white">
+                <Target size={21} />
               </div>
-
-              <span className="text-xl font-bold tracking-tight text-white">
-                Site name
+              <span className="text-xl font-bold">
+                Opportunity<span className="text-blue-600">X</span>
               </span>
             </Link>
 
-            <p className="text-sm leading-relaxed">
-              simple description
+            <p className="mt-4 max-w-xs text-sm leading-6 text-slate-500">
+              Helping students learn, earn, build experience, and move toward a better future.
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Platform Links */}
           <div>
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Quick Links
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+              Platform
             </h3>
-
             <ul className="space-y-3 text-sm">
               <li>
-                <Link
-                  to="/"
-                  className="hover:text-blue-400 transition-colors"
-                >
+                <Link to="/" className="text-slate-500 hover:text-slate-900 transition">
                   Home
                 </Link>
               </li>
-
               <li>
-                <Link
-                  to="/login"
-                  className="hover:text-blue-400 transition-colors"
-                >
-                  Sign In
+                <Link to="/part-time-jobs" className="text-slate-500 hover:text-slate-900 transition">
+                  Part-Time Jobs
                 </Link>
               </li>
-
               <li>
-                <Link
-                  to="/register"
-                  className="hover:text-blue-400 transition-colors"
-                >
-                  Create Account
+                <Link to="/freelancing" className="text-slate-500 hover:text-slate-900 transition">
+                  Freelancing
+                </Link>
+              </li>
+              <li>
+                <Link to="/training" className="text-slate-500 hover:text-slate-900 transition">
+                  Training Programs
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Features */}
+          {/* Account */}
           <div>
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Features
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+              Account
             </h3>
-
             <ul className="space-y-3 text-sm">
-              <li></li>
-              <li></li>
-              <li></li>
-              <li></li>
+              <li>
+                <Link to="/login" className="text-slate-500 hover:text-slate-900 transition">
+                  Login
+                </Link>
+              </li>
+              <li>
+                <Link to="/register" className="text-slate-500 hover:text-slate-900 transition">
+                  Register
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Support */}
           <div>
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Contact Us
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+              Support
             </h3>
-
-            <div className="space-y-3 text-sm">
-
-              <div className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-blue-500 mt-1 shrink-0" />
-                <span>
-                  location
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-blue-500 shrink-0" />
-                <span>+94 77 123 4567</span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-blue-500 shrink-0" />
-                <span>email</span>
-              </div>
-
-            </div>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link to="/about" className="text-slate-500 hover:text-slate-900 transition">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/how-it-works" className="text-slate-500 hover:text-slate-900 transition">
+                  How It Works
+                </Link>
+              </li>
+            </ul>
           </div>
-
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-12 pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-
-          <p>
-            © {currentYear} EduMark Hub. All rights reserved.
-          </p>
-
+        {/* Bottom copyright */}
+        <div className="mt-12 border-t border-slate-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+          <p>© {currentYear} OpportunityX. All rights reserved.</p>
           <p className="flex items-center gap-1">
-            Built with
-            <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-            for modern education
+            Built with <Heart size={14} className="text-red-500 fill-red-500" /> for student empowerment
           </p>
-
         </div>
-
       </div>
     </footer>
   );
