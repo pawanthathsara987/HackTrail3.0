@@ -5,6 +5,9 @@ import Footer from './components/Footer';
 import Home from './pages/home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import PartTimeJobDetails from './pages/partTimeJobsDetails';
+import PartTimeJobs from './pages/PartTimeJobs';
+
 
 function App() {
   return (
@@ -22,6 +25,10 @@ function App() {
             {/* Authentication Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+
+            {/* Part-Time Job Routes */}
+            <Route path="/part-time-jobs" element={<PartTimeJobs />} />
+            <Route path="/part-time-jobs/:id" element={<PartTimeJobDetails />} />
 
             {/* Catch-all fallback redirecting to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
