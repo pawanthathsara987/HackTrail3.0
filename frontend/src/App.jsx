@@ -20,6 +20,8 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col font-sans antialiased">
+        <Header />
+
         <main className="flex-grow">
           <Routes>
             {/* Home Route */}
@@ -32,9 +34,18 @@ function App() {
             {/* Part-Time Job Routes */}
             <Route path="/part-time-jobs" element={<PartTimeJobs />} />
             <Route path="/part-time-jobs/:id" element={<PartTimeJobDetails />} />
+
             {/* Training Routes */}
             <Route path="/training" element={<Training />} />
             <Route path="/training/:id" element={<TrainingDetails />} />
+
+            {/* Freelancing Routes */}
+            <Route path="/freelancing" element={<Freelancing />} />
+            <Route path="/freelancing/:id" element={<FreelanceProjectDetails />} />
+            <Route path="/freelance" element={<Freelancing />} />
+            <Route path="/freelance/details" element={<FreelanceProjectDetails />} />
+            <Route path="/freelance/:id" element={<FreelanceProjectDetails />} />
+
             {/* Role Profile & Dashboard Routes */}
             <Route path="/student/dashboard" element={<StudentDashboard />} />
             <Route path="/job-poster/dashboard" element={<JobPosterDashboard />} />
@@ -42,12 +53,10 @@ function App() {
 
             {/* Catch-all fallback redirecting to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
-            <Route path="/freelance" element={<Freelancing />} />
-            <Route path="/freelance/details" element={<FreelanceProjectDetails />} />
-
-            
           </Routes>
         </main>
+
+        <Footer />
       </div>
     </Router>
   );
