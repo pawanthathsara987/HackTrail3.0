@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import Home from './pages/home/Home';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
+import HowItWorks from './pages/HowItWorks';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import PartTimeJobs from './pages/PartTimeJobs';
@@ -67,6 +68,7 @@ function App() {
 
             {/* Platform Information Routes */}
             <Route path="/about" element={<AboutUs />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/contact" element={<ContactUs />} />
 
             {/* Authentication Routes (Guest Only - hidden/redirected if logged in) */}
