@@ -1,17 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-import Header from './components/Header';
-import Footer from './components/Footer';
-import FreelanceProjectDetails from './pages/freelancingdetails';
-import Freelancing from './pages/Freelancing';
-import PartTimeJobDetails from './pages/partTimeJobsDetails';
-import PartTimeJobs from './pages/PartTimeJobs';
-import TrainingDetails from './pages/TrainingDetails';
-import Training from './pages/Training';
 import Home from './pages/home/Home';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import PartTimeJobs from './pages/PartTimeJobs';
+import PartTimeJobDetails from './pages/partTimeJobsDetails';
+import Freelancing from './pages/Freelancing';
+import FreelanceProjectDetails from './pages/freelancingdetails';
+import Training from './pages/Training';
+import TrainingDetails from './pages/TrainingDetails';
 import StudentDashboard from './pages/dashboards/StudentDashboard';
 import JobPosterDashboard from './pages/dashboards/JobPosterDashboard';
 import ClientDashboard from './pages/dashboards/ClientDashboard';
@@ -25,6 +25,10 @@ function App() {
             {/* Home Route */}
             <Route path="/" element={<Home />} />
 
+            {/* Platform Information Routes */}
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/contact" element={<ContactUs />} />
+
             {/* Authentication Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -32,9 +36,16 @@ function App() {
             {/* Part-Time Job Routes */}
             <Route path="/part-time-jobs" element={<PartTimeJobs />} />
             <Route path="/part-time-jobs/:id" element={<PartTimeJobDetails />} />
+
+            {/* Freelancing Routes */}
+            <Route path="/freelance" element={<Freelancing />} />
+            <Route path="/freelancing" element={<Freelancing />} />
+            <Route path="/freelance/details" element={<FreelanceProjectDetails />} />
+
             {/* Training Routes */}
             <Route path="/training" element={<Training />} />
             <Route path="/training/:id" element={<TrainingDetails />} />
+
             {/* Role Profile & Dashboard Routes */}
             <Route path="/student/dashboard" element={<StudentDashboard />} />
             <Route path="/job-poster/dashboard" element={<JobPosterDashboard />} />
@@ -42,10 +53,6 @@ function App() {
 
             {/* Catch-all fallback redirecting to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
-            <Route path="/freelance" element={<Freelancing />} />
-            <Route path="/freelance/details" element={<FreelanceProjectDetails />} />
-
-            
           </Routes>
         </main>
       </div>
