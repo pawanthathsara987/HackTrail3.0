@@ -5,6 +5,8 @@ import Footer from './components/Footer';
 import Home from './pages/home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import FreelanceProjectDetails from './pages/freelancingdetails';
+import Freelancing from './pages/Freelancing';
 
 function App() {
   return (
@@ -25,6 +27,10 @@ function App() {
 
             {/* Catch-all fallback redirecting to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/freelance" element={<Freelancing />} />
+            <Route path="/freelance/details" element={<FreelanceProjectDetails />} />
+
+            
           </Routes>
         </main>
 
