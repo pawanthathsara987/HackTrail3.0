@@ -44,6 +44,18 @@ const Header = () => {
     navigate("/login");
   };
 
+  const handleSectionClick = (sectionId) => {
+    setMobileMenuOpen(false);
+    if (location.pathname === "/") {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      navigate("/", { state: { scrollTo: sectionId } });
+    }
+  };
+
   const isActive = (path) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
 
@@ -61,7 +73,7 @@ const Header = () => {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden items-center gap-7 md:flex">
+        <nav className="hidden items-center gap-6 lg:flex md:flex">
           <Link
             to="/"
             className={`text-sm font-medium transition ${
@@ -105,6 +117,30 @@ const Header = () => {
           >
             Training Programs
           </Link>
+
+          <button
+            type="button"
+            onClick={() => handleSectionClick("how-it-works")}
+            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
+          >
+            How It Works
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSectionClick("about")}
+            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
+          >
+            About Us
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSectionClick("contact")}
+            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition"
+          >
+            Contact Us
+          </button>
         </nav>
 
         {/* Desktop Auth / User Action */}
@@ -191,6 +227,30 @@ const Header = () => {
             >
               Training Programs
             </Link>
+
+            <button
+              type="button"
+              onClick={() => handleSectionClick("how-it-works")}
+              className="text-left rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              How It Works
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSectionClick("about")}
+              className="text-left rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              About Us
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSectionClick("contact")}
+              className="text-left rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Contact Us
+            </button>
 
             <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
               {user ? (
