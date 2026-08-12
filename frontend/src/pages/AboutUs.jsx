@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import {
   Target,
   Sparkles,
@@ -24,10 +22,10 @@ const AboutUs = () => {
   const [activeTab, setActiveTab] = useState("students");
 
   const stats = [
-    { label: "Active Students & Learners", value: "15,000+", icon: Users, color: "text-blue-600 bg-blue-50" },
-    { label: "Part-Time & Shift Jobs Posted", value: "3,800+", icon: Briefcase, color: "text-indigo-600 bg-indigo-50" },
-    { label: "Freelance Projects Completed", value: "5,200+", icon: Zap, color: "text-amber-600 bg-amber-50" },
-    { label: "Training Program Graduates", value: "4,500+", icon: GraduationCap, color: "text-emerald-600 bg-emerald-50" },
+    { label: "Active Students & Learners", value: "15,000+", icon: Users, color: "text-blue-600 bg-blue-50 border-blue-100" },
+    { label: "Part-Time & Shift Jobs Posted", value: "3,800+", icon: Briefcase, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
+    { label: "Freelance Projects Completed", value: "5,200+", icon: Zap, color: "text-amber-600 bg-amber-50 border-amber-100" },
+    { label: "Training Program Graduates", value: "4,500+", icon: GraduationCap, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
   ];
 
   const pillars = [
@@ -48,7 +46,7 @@ const AboutUs = () => {
       description:
         "A platform where students showcase their talents in Web Development, Graphic Design, Content Writing, and Marketing to earn income from real clients worldwide.",
       highlights: ["Real client projects", "Portfolio building", "Fair project rates & escrow"],
-      link: "/freelance",
+      link: "/freelancing",
       linkText: "Explore Projects",
     },
     {
@@ -123,39 +121,37 @@ const AboutUs = () => {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans">
-      <Header />
-
       <main>
         {/* =========================================
             1. HERO SECTION
         ========================================= */}
         <section className="relative overflow-hidden bg-slate-900 py-20 text-white sm:py-28 lg:py-32">
           {/* Decorative Gradients */}
-          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue-600/30 blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-indigo-600/30 blur-3xl" />
+          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue-600/30 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-indigo-600/30 blur-3xl pointer-events-none" />
 
           <div className="relative mx-auto max-w-7xl px-5 text-center sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-300">
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-300 shadow-sm backdrop-blur">
                 <Sparkles size={16} />
                 About OpportunityX
               </span>
 
-              <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl leading-tight">
                 Empowering Students to{" "}
-                <span className="bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-teal-300 bg-clip-text text-transparent">
                   Learn, Earn & Succeed
                 </span>
               </h1>
 
-              <p className="mt-6 text-lg leading-relaxed text-slate-300 sm:text-xl">
+              <p className="mt-6 text-lg leading-relaxed text-slate-300 sm:text-xl max-w-2xl mx-auto">
                 OpportunityX is Sri Lanka’s premier student empowerment platform—connecting ambitious learners with flexible part-time work, freelance projects, and practical training programs.
               </p>
 
               <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
                 <Link
                   to="/part-time-jobs"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-base font-semibold text-white transition hover:bg-blue-500 shadow-lg shadow-blue-600/20"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-base font-semibold text-white transition duration-200 hover:bg-blue-500 shadow-lg shadow-blue-600/25 active:scale-95"
                 >
                   Explore Opportunities
                   <ArrowRight size={18} />
@@ -163,7 +159,7 @@ const AboutUs = () => {
 
                 <Link
                   to="/contact"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-6 py-3.5 text-base font-semibold text-white transition hover:bg-slate-800 hover:border-slate-600"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-6 py-3.5 text-base font-semibold text-white transition duration-200 hover:bg-slate-800 hover:border-slate-600 active:scale-95"
                 >
                   Get In Touch
                 </Link>
@@ -175,12 +171,14 @@ const AboutUs = () => {
               {stats.map((item, idx) => (
                 <div
                   key={idx}
-                  className="rounded-2xl border border-slate-800 bg-slate-800/50 p-6 text-left backdrop-blur transition hover:border-slate-700"
+                  className="group rounded-2xl border border-slate-800 bg-slate-800/50 p-6 text-left backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-slate-700 hover:bg-slate-800/80 shadow-md"
                 >
                   <div className={`inline-flex rounded-xl p-3 ${item.color}`}>
                     <item.icon size={24} />
                   </div>
-                  <p className="mt-4 text-3xl font-bold text-white">{item.value}</p>
+                  <p className="mt-4 text-3xl font-bold text-white group-hover:text-blue-300 transition-colors">
+                    {item.value}
+                  </p>
                   <p className="mt-1 text-sm font-medium text-slate-400">{item.label}</p>
                 </div>
               ))}
@@ -194,10 +192,10 @@ const AboutUs = () => {
         <section className="py-20 bg-slate-50 sm:py-24">
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                 Driven by Purpose
               </span>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Our Mission & Strategic Vision
               </h2>
               <p className="mt-4 text-lg text-slate-600">
@@ -207,8 +205,8 @@ const AboutUs = () => {
 
             <div className="grid gap-8 md:grid-cols-2">
               {/* Mission Card */}
-              <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md sm:p-10">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md mb-6">
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:shadow-xl sm:p-10 group">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-600/30 mb-6 group-hover:scale-110 transition-transform">
                   <Target size={26} />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900">Our Mission</h3>
@@ -232,8 +230,8 @@ const AboutUs = () => {
               </div>
 
               {/* Vision Card */}
-              <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md sm:p-10">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md mb-6">
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:shadow-xl sm:p-10 group">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md shadow-indigo-600/30 mb-6 group-hover:scale-110 transition-transform">
                   <Award size={26} />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900">Our Vision</h3>
@@ -265,10 +263,10 @@ const AboutUs = () => {
         <section className="py-20 bg-white sm:py-24">
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                 Comprehensive Platform
               </span>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 The Three Pillars of OpportunityX
               </h2>
               <p className="mt-4 text-lg text-slate-600">
@@ -280,14 +278,14 @@ const AboutUs = () => {
               {pillars.map((pillar, idx) => (
                 <div
                   key={idx}
-                  className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-8 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl"
+                  className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-200 hover:shadow-xl"
                 >
                   <div>
                     <div className="flex items-center justify-between">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-md">
                         <pillar.icon size={24} />
                       </div>
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                      <span className="rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
                         {pillar.badge}
                       </span>
                     </div>
@@ -298,7 +296,7 @@ const AboutUs = () => {
                     <div className="mt-6 space-y-2.5 border-t border-slate-100 pt-6">
                       {pillar.highlights.map((item, i) => (
                         <div key={i} className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                          <CheckCircle2 size={16} className="text-blue-600" />
+                          <CheckCircle2 size={16} className="text-blue-600 shrink-0" />
                           <span>{item}</span>
                         </div>
                       ))}
@@ -308,10 +306,10 @@ const AboutUs = () => {
                   <div className="mt-8 pt-4 border-t border-slate-100">
                     <Link
                       to={pillar.link}
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 group"
+                      className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700 group"
                     >
                       {pillar.linkText}
-                      <ChevronRight size={16} className="transition group-hover:translate-x-1" />
+                      <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
                     </Link>
                   </div>
                 </div>
@@ -326,10 +324,10 @@ const AboutUs = () => {
         <section className="py-20 bg-slate-900 text-white sm:py-24">
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
                 What Guides Us
               </span>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
                 Our Core Principles & Values
               </h2>
               <p className="mt-4 text-lg text-slate-400">
@@ -341,9 +339,9 @@ const AboutUs = () => {
               {coreValues.map((val, idx) => (
                 <div
                   key={idx}
-                  className="rounded-2xl border border-slate-800 bg-slate-800/60 p-6 backdrop-blur"
+                  className="rounded-2xl border border-slate-800 bg-slate-800/60 p-6 backdrop-blur transition-all duration-300 hover:border-blue-500/40 hover:bg-slate-800/90"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600/20 text-blue-400">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600/20 text-blue-400">
                     <val.icon size={22} />
                   </div>
                   <h3 className="mt-5 text-lg font-bold text-white">{val.title}</h3>
@@ -360,23 +358,23 @@ const AboutUs = () => {
         <section className="py-20 bg-slate-50 sm:py-24">
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-12">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                 Designed for Everyone
               </span>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Why Choose OpportunityX?
               </h2>
             </div>
 
             {/* Tabs Selector */}
             <div className="flex justify-center mb-10">
-              <div className="inline-flex rounded-xl bg-slate-200/80 p-1">
+              <div className="inline-flex rounded-xl bg-slate-200/80 p-1.5 shadow-inner">
                 <button
                   type="button"
                   onClick={() => setActiveTab("students")}
-                  className={`rounded-lg px-6 py-2.5 text-sm font-semibold transition ${
+                  className={`rounded-lg px-6 py-2.5 text-sm font-bold transition-all ${
                     activeTab === "students"
-                      ? "bg-white text-slate-900 shadow-sm"
+                      ? "bg-white text-slate-900 shadow-md"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
@@ -385,9 +383,9 @@ const AboutUs = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab("employers")}
-                  className={`rounded-lg px-6 py-2.5 text-sm font-semibold transition ${
+                  className={`rounded-lg px-6 py-2.5 text-sm font-bold transition-all ${
                     activeTab === "employers"
-                      ? "bg-white text-slate-900 shadow-sm"
+                      ? "bg-white text-slate-900 shadow-md"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
@@ -397,7 +395,7 @@ const AboutUs = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="mx-auto max-w-4xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
+            <div className="mx-auto max-w-4xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10 transition-all duration-300">
               {activeTab === "students" ? (
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div className="space-y-4">
@@ -485,10 +483,10 @@ const AboutUs = () => {
         <section className="py-20 bg-white sm:py-24">
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                 Behind the Platform
               </span>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 Meet Our Leadership Team
               </h2>
               <p className="mt-4 text-lg text-slate-600">
@@ -500,23 +498,27 @@ const AboutUs = () => {
               {teamMembers.map((member, idx) => (
                 <div
                   key={idx}
-                  className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-lg"
+                  className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-blue-200"
                 >
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="h-64 w-full object-cover"
-                  />
+                  <div className="overflow-hidden">
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-slate-900">{member.name}</h3>
-                    <p className="text-xs font-semibold text-blue-600">{member.role}</p>
+                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                      {member.name}
+                    </h3>
+                    <p className="text-xs font-semibold text-blue-600 mt-0.5">{member.role}</p>
                     <p className="mt-3 text-xs leading-relaxed text-slate-600">{member.bio}</p>
 
                     <div className="mt-4 flex flex-wrap gap-1.5 pt-3 border-t border-slate-100">
                       {member.skills.map((skill, sIdx) => (
                         <span
                           key={sIdx}
-                          className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
+                          className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700"
                         >
                           {skill}
                         </span>
@@ -533,25 +535,28 @@ const AboutUs = () => {
             7. CALL TO ACTION BANNER
         ========================================= */}
         <section className="px-5 py-16 sm:px-6 lg:px-8 bg-slate-50">
-          <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-slate-900 px-6 py-16 text-center sm:px-12 lg:py-20">
-            <div className="mx-auto max-w-3xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-blue-300">
+          <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-slate-900 px-6 py-16 text-center sm:px-12 lg:py-20 shadow-2xl relative">
+            <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl pointer-events-none" />
+            <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-indigo-600/20 blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 mx-auto max-w-3xl">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-blue-300 backdrop-blur">
                 <Sparkles size={16} />
                 Join OpportunityX Today
               </span>
 
-              <h2 className="mt-6 text-3xl font-extrabold text-white sm:text-4xl lg:text-5xl">
+              <h2 className="mt-6 text-3xl font-extrabold text-white sm:text-4xl lg:text-5xl leading-tight">
                 Ready to Take Control of Your Future?
               </h2>
 
-              <p className="mt-5 text-lg leading-relaxed text-slate-300">
+              <p className="mt-5 text-lg leading-relaxed text-slate-300 max-w-2xl mx-auto">
                 Start searching for flexible part-time jobs, submit freelance proposals, or enroll in practical training programs today.
               </p>
 
               <div className="mt-9 flex flex-col justify-center gap-4 sm:flex-row">
                 <Link
                   to="/register"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-500 shadow-md"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-bold text-white transition-all duration-200 hover:bg-blue-500 shadow-lg shadow-blue-600/30 active:scale-95"
                 >
                   Create Free Account
                   <ArrowRight size={18} />
@@ -559,7 +564,7 @@ const AboutUs = () => {
 
                 <Link
                   to="/contact"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 font-semibold text-white transition hover:bg-white/10"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 font-bold text-white transition-all duration-200 hover:bg-white/10 active:scale-95"
                 >
                   Contact Support
                 </Link>
@@ -568,8 +573,6 @@ const AboutUs = () => {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 };

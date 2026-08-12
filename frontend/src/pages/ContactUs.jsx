@@ -1,22 +1,17 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import {
   Mail,
   Phone,
   MapPin,
   Clock,
   Send,
-  MessageSquare,
   Sparkles,
   CheckCircle2,
   AlertCircle,
   ChevronDown,
-  HelpCircle,
   Building2,
   Headphones,
-  FileText,
   User,
 } from "lucide-react";
 
@@ -80,7 +75,7 @@ const ContactUs = () => {
     },
     {
       q: "How does OpportunityX ensure platform safety & payment trust?",
-      a: "We verify employer profiles and client accounts before listings go live. Freelance projects utilize secure milestone milestones or escrow structures to ensure students receive fair pay upon completing project deliverables.",
+      a: "We verify employer profiles and client accounts before listings go live. Freelance projects utilize secure milestone structures or escrow options to ensure students receive fair pay upon completing project deliverables.",
     },
     {
       q: "What should I do if I need urgent account help or password resets?",
@@ -90,31 +85,29 @@ const ContactUs = () => {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans">
-      <Header />
-
       <main>
         {/* =========================================
             1. HERO SECTION
         ========================================= */}
         <section className="relative overflow-hidden bg-slate-900 py-20 text-white sm:py-24 lg:py-28">
-          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue-600/30 blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-indigo-600/30 blur-3xl" />
+          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue-600/30 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-indigo-600/30 blur-3xl pointer-events-none" />
 
           <div className="relative mx-auto max-w-7xl px-5 text-center sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-300">
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-300 shadow-sm backdrop-blur">
                 <Headphones size={16} />
                 24/7 Dedicated Assistance
               </span>
 
-              <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl leading-tight">
                 We're Here to{" "}
-                <span className="bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-teal-300 bg-clip-text text-transparent">
                   Help You Succeed
                 </span>
               </h1>
 
-              <p className="mt-6 text-lg leading-relaxed text-slate-300 sm:text-xl">
+              <p className="mt-6 text-lg leading-relaxed text-slate-300 sm:text-xl max-w-2xl mx-auto">
                 Have questions about job applications, freelance proposals, training courses, or corporate partnerships? Get in touch with our team.
               </p>
             </div>
@@ -127,8 +120,8 @@ const ContactUs = () => {
         <section className="-mt-12 relative z-10 mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {/* Address */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 mb-4">
+            <div className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-blue-200">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 mb-4 group-hover:scale-110 transition-transform">
                 <MapPin size={24} />
               </div>
               <h3 className="text-base font-bold text-slate-900">Headquarters</h3>
@@ -138,49 +131,49 @@ const ContactUs = () => {
             </div>
 
             {/* Email */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 mb-4">
+            <div className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-indigo-200">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 mb-4 group-hover:scale-110 transition-transform">
                 <Mail size={24} />
               </div>
               <h3 className="text-base font-bold text-slate-900">Email Support</h3>
               <p className="mt-2 text-sm text-slate-600">
-                <a href="mailto:support@opportunityx.lk" className="hover:text-blue-600 font-medium block">
+                <a href="mailto:support@opportunityx.lk" className="hover:text-blue-600 font-semibold block transition-colors">
                   support@opportunityx.lk
                 </a>
-                <a href="mailto:partnerships@opportunityx.lk" className="hover:text-blue-600 font-medium block mt-1">
+                <a href="mailto:partnerships@opportunityx.lk" className="hover:text-blue-600 font-semibold block mt-1 transition-colors">
                   partnerships@opportunityx.lk
                 </a>
               </p>
             </div>
 
             {/* Phone */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 mb-4">
+            <div className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
                 <Phone size={24} />
               </div>
               <h3 className="text-base font-bold text-slate-900">Hotline & WhatsApp</h3>
               <p className="mt-2 text-sm text-slate-600">
-                <a href="tel:+94112345678" className="hover:text-blue-600 font-medium block">
+                <a href="tel:+94112345678" className="hover:text-blue-600 font-semibold block transition-colors">
                   +94 11 234 5678
                 </a>
-                <a href="https://wa.me/94771234567" target="_blank" rel="noreferrer" className="hover:text-emerald-600 font-medium block mt-1">
+                <a href="https://wa.me/94771234567" target="_blank" rel="noreferrer" className="hover:text-emerald-600 font-semibold block mt-1 transition-colors">
                   +94 77 123 4567 (WhatsApp)
                 </a>
               </p>
             </div>
 
             {/* Hours */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 mb-4">
+            <div className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-amber-200">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 mb-4 group-hover:scale-110 transition-transform">
                 <Clock size={24} />
               </div>
               <h3 className="text-base font-bold text-slate-900">Operating Hours</h3>
               <p className="mt-2 text-xs text-slate-600 leading-relaxed">
-                <span className="font-semibold text-slate-800">Mon - Fri:</span> 8:30 AM - 6:00 PM
+                <span className="font-bold text-slate-800">Mon - Fri:</span> 8:30 AM - 6:00 PM
                 <br />
-                <span className="font-semibold text-slate-800">Saturday:</span> 9:00 AM - 1:00 PM
+                <span className="font-bold text-slate-800">Saturday:</span> 9:00 AM - 1:00 PM
                 <br />
-                <span className="font-semibold text-slate-800">Sunday:</span> Closed (Online Help)
+                <span className="font-bold text-slate-800">Sunday:</span> Closed (Online Help Available)
               </p>
             </div>
           </div>
@@ -195,10 +188,10 @@ const ContactUs = () => {
               {/* Form Container (7 cols) */}
               <div className="lg:col-span-7 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
                 <div className="mb-8">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                     Send Us a Message
                   </span>
-                  <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                     How Can We Assist You Today?
                   </h2>
                   <p className="mt-2 text-sm text-slate-600">
@@ -208,8 +201,8 @@ const ContactUs = () => {
 
                 {/* Success Banner */}
                 {isSubmitted ? (
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center animate-in fade-in">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white mb-4">
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center animate-in fade-in duration-300">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-white mb-4 shadow-md">
                       <CheckCircle2 size={26} />
                     </div>
                     <h3 className="text-xl font-bold text-emerald-900">Message Sent Successfully!</h3>
@@ -219,7 +212,7 @@ const ContactUs = () => {
                     <button
                       type="button"
                       onClick={() => setIsSubmitted(false)}
-                      className="mt-6 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition"
+                      className="mt-6 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition shadow-sm"
                     >
                       Send Another Message
                     </button>
@@ -236,7 +229,7 @@ const ContactUs = () => {
                     <div className="grid gap-5 sm:grid-cols-2">
                       {/* Full Name */}
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Full Name <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -255,7 +248,7 @@ const ContactUs = () => {
 
                       {/* Email */}
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Email Address <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -276,7 +269,7 @@ const ContactUs = () => {
                     <div className="grid gap-5 sm:grid-cols-2">
                       {/* Phone Number */}
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Phone Number (Optional)
                         </label>
                         <div className="relative">
@@ -294,14 +287,14 @@ const ContactUs = () => {
 
                       {/* Inquiry Type */}
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                           Inquiry Category
                         </label>
                         <select
                           name="inquiryType"
                           value={formData.inquiryType}
                           onChange={handleChange}
-                          className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                          className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 bg-white"
                         >
                           <option value="Student Support">Student Support & Job Help</option>
                           <option value="Employer Posting">Employer & Job Poster Inquiry</option>
@@ -315,7 +308,7 @@ const ContactUs = () => {
 
                     {/* Subject */}
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                         Subject Line
                       </label>
                       <input
@@ -330,7 +323,7 @@ const ContactUs = () => {
 
                     {/* Message */}
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                         Your Message <span className="text-red-500">*</span>
                       </label>
                       <textarea
@@ -347,7 +340,7 @@ const ContactUs = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:opacity-50 shadow-md shadow-blue-600/20 active:scale-95"
                     >
                       {isSubmitting ? (
                         <>
@@ -367,8 +360,10 @@ const ContactUs = () => {
 
               {/* Side Info & Map Card (5 cols) */}
               <div className="lg:col-span-5 space-y-6">
-                <div className="rounded-3xl border border-slate-200 bg-slate-900 p-8 text-white shadow-sm">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white mb-6">
+                <div className="rounded-3xl border border-slate-200 bg-slate-900 p-8 text-white shadow-xl relative overflow-hidden">
+                  <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-600/20 blur-2xl pointer-events-none" />
+
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white mb-6 shadow-md shadow-blue-600/30">
                     <Building2 size={24} />
                   </div>
                   <h3 className="text-2xl font-bold">Visit Our Innovation Hub</h3>
@@ -393,20 +388,20 @@ const ContactUs = () => {
                 </div>
 
                 {/* Simulated Map Visual */}
-                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 p-6 relative min-h-[220px] flex flex-col justify-between">
-                  <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] opacity-60" />
+                <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 p-6 relative min-h-[220px] flex flex-col justify-between shadow-sm">
+                  <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] opacity-60 pointer-events-none" />
                   <div className="relative z-10">
                     <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-800 shadow-sm border border-slate-200">
                       Colombo 03 Location Map
                     </span>
                   </div>
                   <div className="relative z-10 mt-12 rounded-2xl bg-white p-4 shadow-md border border-slate-200 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shrink-0">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shrink-0 shadow-sm">
                       <MapPin size={20} />
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-slate-900">OpportunityX HQ</h4>
-                      <p className="text-[11px] text-slate-500">Tech City, Galle Road</p>
+                      <p className="text-[11px] text-slate-500">Tech City, Galle Road, Colombo 03</p>
                     </div>
                   </div>
                 </div>
@@ -414,60 +409,7 @@ const ContactUs = () => {
             </div>
           </div>
         </section>
-
-        {/* =========================================
-            4. FREQUENTLY ASKED QUESTIONS (FAQ)
-        ========================================= */}
-        <section className="py-20 bg-slate-50 sm:py-24">
-          <div className="mx-auto max-w-5xl px-5 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
-                Got Questions?
-              </span>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                Frequently Asked Questions
-              </h2>
-              <p className="mt-4 text-base text-slate-600">
-                Find quick answers to common questions about using OpportunityX as a student, freelancer, or job poster.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {faqs.map((faq, idx) => {
-                const isOpen = openFaq === idx;
-                return (
-                  <div
-                    key={idx}
-                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-slate-300"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setOpenFaq(isOpen ? -1 : idx)}
-                      className="flex w-full items-center justify-between p-6 text-left"
-                    >
-                      <span className="text-base font-bold text-slate-900 pr-4">{faq.q}</span>
-                      <ChevronDown
-                        size={20}
-                        className={`shrink-0 text-slate-500 transition-transform duration-200 ${
-                          isOpen ? "rotate-180 text-blue-600" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {isOpen && (
-                      <div className="border-t border-slate-100 bg-slate-50/50 p-6 pt-4 text-sm leading-relaxed text-slate-600">
-                        {faq.a}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
       </main>
-
-      <Footer />
     </div>
   );
 };
