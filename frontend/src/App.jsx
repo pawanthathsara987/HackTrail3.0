@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 import Header from './components/Header';
 import Footer from './components/Footer';
+import PartTimeJobDetails from './pages/partTimeJobsDetails';
+import PartTimeJobs from './pages/PartTimeJobs';
 import TrainingDetails from './pages/TrainingDetails';
 import Training from './pages/Training';
 import Home from './pages/home/Home';
@@ -25,6 +27,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
+            {/* Part-Time Job Routes */}
+            <Route path="/part-time-jobs" element={<PartTimeJobs />} />
+            <Route path="/part-time-jobs/:id" element={<PartTimeJobDetails />} />
             {/* Training Routes */}
             <Route path="/training" element={<Training />} />
             <Route path="/training/:id" element={<TrainingDetails />} />
