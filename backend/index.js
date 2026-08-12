@@ -34,7 +34,7 @@ app.use("/api/freelance-projects", freelanceRoutes);
 
 // Sync Models
 sequelize
-  .sync()
+  .sync({ alter: true })
   .then(() => {
     console.log("✅ Database synchronized");
   })

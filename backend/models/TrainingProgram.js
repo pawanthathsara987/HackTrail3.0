@@ -77,6 +77,35 @@ const TrainingProgram = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+    about: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    whatYouWillLearn: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: [],
+    },
+    skills: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: [],
+    },
+    requirements: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: [],
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: "Online",
+    },
+    learningFormat: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: "Online",
+    },
   },
   {
     timestamps: true,

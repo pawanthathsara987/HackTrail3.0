@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
     ArrowLeft,
     Award,
@@ -20,8 +20,21 @@ import {
     XCircle,
 } from "lucide-react";
 
-const API_URL =
-    import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "";
+
+const parseProvider = (provider) => {
+    if (!provider) return { name: "Training Provider", bio: "" };
+    if (typeof provider === "object") return provider;
+    if (typeof provider === "string") {
+        try {
+            if (provider.trim().startsWith("{")) {
+                return JSON.parse(provider);
+            }
+        } catch (e) { }
+        return { name: provider, bio: "" };
+    }
+    return { name: String(provider), bio: "" };
+};
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +52,7 @@ const API_URL =
 function TrainingDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [program, setProgram] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -50,30 +64,6 @@ function TrainingDetails() {
     const [enrolling, setEnrolling] = useState(false);
     const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
     const [enrollmentError, setEnrollmentError] = useState("");
-
-    /*
-    |--------------------------------------------------------------------------
-    | Authentication
-    |--------------------------------------------------------------------------
-    | This reads the existing authentication information.
-    |
-    | Expected localStorage example:
-    |
-    | localStorage.setItem("token", jwtToken);
-    |
-    | localStorage.setItem(
-    |   "user",
-    |   JSON.stringify({
-    |      id: 1,
-    |      name: "Ashik",
-    |      role: "STUDENT"
-    |   })
-    | );
-    |
-    | If your existing authentication context uses different keys,
-    | replace getCurrentUser() with your existing auth hook/context.
-    |--------------------------------------------------------------------------
-    */
 
     const getCurrentUser = () => {
         try {
@@ -107,12 +97,6 @@ function TrainingDetails() {
         userRole === "EMPLOYER" ||
         userRole === "CLIENT";
 
-    /*
-    |--------------------------------------------------------------------------
-    | Fetch Training Program
-    |--------------------------------------------------------------------------
-    */
-
     useEffect(() => {
         fetchTrainingProgram();
     }, [id]);
@@ -123,8 +107,14 @@ function TrainingDetails() {
             setError("");
             setNotFound(false);
 
+            const headers = {};
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
+
             const response = await fetch(
-                `${API_URL}/api/training-programs/${id}`
+                `${API_URL}/api/training-programs/${id}`,
+                { headers }
             );
 
             if (response.status === 404) {
@@ -137,14 +127,11 @@ function TrainingDetails() {
             }
 
             const data = await response.json();
+            const training = data?.program || data?.data || data;
 
-            /*
-             * Supports either:
-             * { ...program }
-             * or
-             * { data: program }
-             */
-            const training = data?.data || data;
+            if (data?.isEnrolled !== undefined) {
+                training.isEnrolled = data.isEnrolled;
+            }
 
             setProgram(training);
         } catch (err) {
@@ -242,7 +229,7 @@ function TrainingDetails() {
                 ...current,
                 isEnrolled: true,
                 enrolledStudents:
-                    Number(current?.enrolledStudents || 0) + 1,
+                    Number(current?.enrolledStudents || current?.enrolledCount || 0) + 1,
             }));
         } catch (err) {
             console.error(err);
@@ -254,6 +241,18 @@ function TrainingDetails() {
             setEnrolling(false);
         }
     };
+
+    useEffect(() => {
+        if (
+            program &&
+            location.state?.autoEnroll &&
+            !program.isEnrolled &&
+            !enrolling &&
+            !enrollmentSuccess
+        ) {
+            handleEnrollment();
+        }
+    }, [program, location.state]);
 
     /*
     |--------------------------------------------------------------------------
@@ -294,6 +293,12 @@ function TrainingDetails() {
             />
         );
     }
+
+    const providerObj = parseProvider(program?.provider);
+    const providerName = providerObj.name || "Training Provider";
+    const providerBio = providerObj.bio || "";
+    const enrolledNum = Number(program?.enrolledCount || program?.enrolledStudents || 0);
+    const reviewsNum = Number(program?.reviewsCount || program?.reviewCount || 0);
 
     const curriculum = program.curriculum || [];
 
@@ -379,11 +384,7 @@ function TrainingDetails() {
                                 <div className="flex items-center gap-3">
 
                                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-purple-600 text-sm font-bold text-white">
-                                        {getInitials(
-                                            program.provider?.name ||
-                                            program.provider ||
-                                            "Provider"
-                                        )}
+                                        {getInitials(providerName)}
                                     </div>
 
                                     <div>
@@ -392,9 +393,7 @@ function TrainingDetails() {
                                         </p>
 
                                         <p className="font-semibold text-white">
-                                            {program.provider?.name ||
-                                                program.provider ||
-                                                "Training Provider"}
+                                            {providerName}
                                         </p>
                                     </div>
 
@@ -411,16 +410,14 @@ function TrainingDetails() {
                                     value={program.rating || "N/A"}
                                     label={
                                         program.rating
-                                            ? `${program.reviewCount || 0} reviews`
+                                            ? `${reviewsNum} reviews`
                                             : "No ratings yet"
                                     }
                                 />
 
                                 <HeroStat
                                     icon={<Users size={17} />}
-                                    value={formatNumber(
-                                        program.enrolledStudents || 0
-                                    )}
+                                    value={formatNumber(enrolledNum)}
                                     label="students enrolled"
                                 />
 
@@ -809,18 +806,14 @@ function TrainingDetails() {
                                     <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-lg font-bold text-white">
                                         {getInitials(
                                             program.trainer?.name ||
-                                            program.provider?.name ||
-                                            program.provider ||
-                                            "Trainer"
+                                            providerName
                                         )}
                                     </div>
 
                                     <div>
                                         <h3 className="font-bold text-slate-900">
                                             {program.trainer?.name ||
-                                                program.provider?.name ||
-                                                program.provider ||
-                                                "Training Provider"}
+                                                providerName}
                                         </h3>
 
                                         <p className="mt-1 text-sm text-slate-500">
@@ -831,9 +824,9 @@ function TrainingDetails() {
 
                                 </div>
 
-                                {program.trainer?.bio && (
+                                {(program.trainer?.bio || providerBio) && (
                                     <p className="mt-5 text-sm leading-6 text-slate-500">
-                                        {program.trainer.bio}
+                                        {program.trainer?.bio || providerBio}
                                     </p>
                                 )}
 
