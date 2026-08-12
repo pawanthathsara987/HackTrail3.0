@@ -326,7 +326,11 @@ const Register = () => {
       return;
     }
 
-    updateField("profilePhoto", file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      updateField("profilePhoto", reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async () => {
@@ -1555,6 +1559,21 @@ const PasswordField = ({
 );
 
 const ProfileImageUpload = ({ file, error, onChange }) => {
+  const getPreviewUrl = () => {
+    if (!file) return null;
+    if (typeof file === "string") return file;
+    if (file instanceof File || file instanceof Blob) {
+      try {
+        return URL.createObjectURL(file);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const previewUrl = getPreviewUrl();
+
   return (
     <div className="mt-6">
       <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -1562,10 +1581,10 @@ const ProfileImageUpload = ({ file, error, onChange }) => {
       </label>
 
       <label className="flex cursor-pointer items-center gap-4 rounded-2xl border-2 border-dashed border-slate-200 p-5 transition hover:border-blue-400 hover:bg-blue-50/30">
-        {file ? (
+        {previewUrl ? (
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-slate-100">
             <img
-              src={URL.createObjectURL(file)}
+              src={previewUrl}
               alt="Profile preview"
               className="h-full w-full object-cover"
             />
@@ -1578,7 +1597,7 @@ const ProfileImageUpload = ({ file, error, onChange }) => {
 
         <div>
           <p className="font-semibold text-slate-800">
-            {file ? "Change profile photo" : "Upload profile photo"}
+            {previewUrl ? "Change profile photo" : "Upload profile photo"}
           </p>
 
           <p className="mt-1 text-xs text-slate-400">
