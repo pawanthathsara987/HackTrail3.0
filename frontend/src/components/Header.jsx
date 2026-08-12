@@ -105,6 +105,17 @@ const Header = () => {
           >
             Training Programs
           </Link>
+
+          <Link
+            to="/how-it-works"
+            className={`text-sm font-medium transition ${
+              isActive("/how-it-works")
+                ? "text-blue-600 font-bold"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            How It Works
+          </Link>
         </nav>
 
         {/* Desktop Auth / User Action */}
@@ -190,6 +201,14 @@ const Header = () => {
               className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               Training Programs
+            </Link>
+
+            <Link
+              to="/how-it-works"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              How It Works
             </Link>
 
             <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
