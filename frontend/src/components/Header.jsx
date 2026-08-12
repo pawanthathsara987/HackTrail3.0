@@ -19,6 +19,16 @@ const Header = () => {
             </span>
           </Link>
 
+          {/* Navigation Links */}
+          <nav className="flex items-center gap-6">
+            <Link to="/" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
+              Home
+            </Link>
+            <Link to="/training" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
+              Training
+            </Link>
+          </nav>
+
           {/* Sign In */}
           <Link
             to="/login"
