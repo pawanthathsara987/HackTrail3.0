@@ -121,16 +121,16 @@ const Login = () => {
         );
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+      const user = data.user;
+
+      if (!user || !user.role) {
+        throw new Error("Unable to determine your account role.");
       }
 
-      /*
-       * The backend determines the role.
-       * Never let the user select or submit a role
-       * from the login form.
-       */
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(user));
+      }
 
       navigate(getDashboardPath(user.role), {
         replace: true,
