@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 import Header from './components/Header';
 import Footer from './components/Footer';
+import FreelanceProjectDetails from './pages/freelancingdetails';
+import Freelancing from './pages/Freelancing';
 import PartTimeJobDetails from './pages/partTimeJobsDetails';
 import PartTimeJobs from './pages/PartTimeJobs';
 import TrainingDetails from './pages/TrainingDetails';
@@ -40,6 +42,10 @@ function App() {
 
             {/* Catch-all fallback redirecting to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/freelance" element={<Freelancing />} />
+            <Route path="/freelance/details" element={<FreelanceProjectDetails />} />
+
+            
           </Routes>
         </main>
       </div>
