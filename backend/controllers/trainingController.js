@@ -11,14 +11,15 @@ export const getPrograms = async (req, res) => {
       category,
       skillLevel,
       trainingType,
+      duration,
       price,
       page = 1,
-      limit = 10,
-      sort = "popular",
+      limit = 12,
+      sort = "Most Popular",
     } = req.query;
 
-    const pageNum = parseInt(page, 10) || 1;
-    const limitNum = parseInt(limit, 10) || 10;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.max(1, parseInt(limit, 10) || 12);
     const offset = (pageNum - 1) * limitNum;
 
     const whereClause = {};
@@ -33,31 +34,45 @@ export const getPrograms = async (req, res) => {
       ];
     }
 
-    if (category) {
+    if (category && category !== "All Categories" && category !== "all") {
       whereClause.category = category;
     }
 
-    if (skillLevel) {
+    if (skillLevel && skillLevel !== "All Levels" && skillLevel !== "all") {
       whereClause.skillLevel = skillLevel;
     }
 
-    if (trainingType) {
+    if (trainingType && trainingType !== "All Types" && trainingType !== "all") {
       whereClause.trainingType = trainingType;
     }
 
-    if (price === "free") {
+    if (price === "free" || price === "Free") {
       whereClause.price = 0;
-    } else if (price === "paid") {
+    } else if (price === "paid" || price === "Paid") {
       whereClause.price = { [Op.gt]: 0 };
     }
 
+    if (duration && duration !== "Any Duration" && duration !== "all") {
+      if (duration === "1–4 Weeks" || duration === "1-4 Weeks") {
+        whereClause.durationWeeks = { [Op.between]: [1, 4] };
+      } else if (duration === "5–8 Weeks" || duration === "5-8 Weeks") {
+        whereClause.durationWeeks = { [Op.between]: [5, 8] };
+      } else if (duration === "9–12 Weeks" || duration === "9-12 Weeks") {
+        whereClause.durationWeeks = { [Op.between]: [9, 12] };
+      } else if (duration === "12+ Weeks") {
+        whereClause.durationWeeks = { [Op.gt]: 12 };
+      }
+    }
+
     let order = [["enrolledCount", "DESC"]];
-    if (sort === "newest") {
+    if (sort === "newest" || sort === "Newest") {
       order = [["createdAt", "DESC"]];
-    } else if (sort === "rating_high") {
+    } else if (sort === "rating_high" || sort === "Highest Rated") {
       order = [["rating", "DESC"], ["reviewsCount", "DESC"]];
-    } else if (sort === "price_low") {
+    } else if (sort === "price_low" || sort === "Price: Low to High") {
       order = [["price", "ASC"]];
+    } else if (sort === "popular" || sort === "Most Popular") {
+      order = [["enrolledCount", "DESC"]];
     }
 
     const { count, rows } = await TrainingProgram.findAndCountAll({
@@ -130,8 +145,14 @@ export const createProgram = async (req, res) => {
       durationWeeks,
       price,
       description,
+      about,
+      whatYouWillLearn,
+      skills,
+      requirements,
       curriculum,
       image,
+      location,
+      learningFormat,
     } = req.body;
 
     if (!title || !provider || !category || !duration || !description) {
@@ -142,7 +163,7 @@ export const createProgram = async (req, res) => {
 
     const program = await TrainingProgram.create({
       title,
-      provider,
+      provider: typeof provider === "object" ? JSON.stringify(provider) : provider,
       providerLogo: providerLogo || null,
       category,
       skillLevel: skillLevel || "Beginner",
@@ -151,8 +172,14 @@ export const createProgram = async (req, res) => {
       durationWeeks: durationWeeks || null,
       price: price !== undefined ? price : 0,
       description,
+      about: about || description,
+      whatYouWillLearn: Array.isArray(whatYouWillLearn) ? whatYouWillLearn : [],
+      skills: Array.isArray(skills) ? skills : [],
+      requirements: Array.isArray(requirements) ? requirements : [],
       curriculum: Array.isArray(curriculum) ? curriculum : [],
       image: image || null,
+      location: location || "Online",
+      learningFormat: learningFormat || trainingType || "Online",
     });
 
     return res.status(201).json({
