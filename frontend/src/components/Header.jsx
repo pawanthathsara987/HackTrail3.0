@@ -19,12 +19,31 @@ const Header = () => {
             </span>
           </Link>
 
+          {/* Navigation Links */}
+          <nav className="flex items-center gap-6">
+            <Link to="/" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
+              Home
+            </Link>
+            <Link to="/training" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
+              Training
+            </Link>
+          </nav>
+
           {/* Sign In */}
           <Link
             to="/login"
             className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+          
           >
             Sign In
+          </Link>
+
+          <Link
+            to="/part-time-jobs"
+            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+
+          >
+            Part-Time Jobs
           </Link>
 
         </div>

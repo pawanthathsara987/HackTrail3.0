@@ -1,0 +1,626 @@
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  BriefcaseBusiness,
+  Users,
+  Mail,
+  Phone,
+  MapPin,
+  DollarSign,
+  Edit,
+  Save,
+  LogOut,
+  Upload,
+  CheckCircle2,
+  Sparkles,
+  PlusCircle,
+  Code2,
+} from "lucide-react";
+
+const ClientDashboard = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "edit"
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
+
+  const [userData, setUserData] = useState(null);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    location: "",
+    profilePhoto: "",
+    servicesInterested: "",
+    projectCategories: "",
+    budgetRange: "",
+    preferredSkills: "",
+    hiringDescription: "",
+  });
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch profile");
+      }
+
+      const user = data.user;
+      setUserData(user);
+
+      const client = user.clientProfile || {};
+
+      setFormData({
+        fullName: user.fullName || "",
+        phone: user.phone || "",
+        location: user.location || "",
+        profilePhoto: user.profilePhoto || "",
+        servicesInterested: client.servicesInterested || "",
+        projectCategories: client.projectCategories || "",
+        budgetRange: client.budgetRange || "",
+        preferredSkills: client.preferredSkills || "",
+        hiringDescription: client.hiringDescription || "",
+      });
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: "error", text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({ ...prev, profilePhoto: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage({ type: "", text: "" });
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update profile");
+      }
+
+      setUserData(data.user);
+      setMessage({ type: "success", text: "Client profile updated successfully!" });
+      setActiveTab("overview");
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: "error", text: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+          <p className="text-sm font-medium text-slate-600">Loading client workspace...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const client = userData?.clientProfile || {};
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white">
+              <BriefcaseBusiness size={20} />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-slate-900">
+              Opportunity<span className="text-emerald-600">X</span>
+            </span>
+          </Link>
+
+          <div className="flex items-center gap-4">
+            <span className="hidden rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 sm:inline-block">
+              Client Workspace
+            </span>
+
+            <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-emerald-100 text-emerald-700 font-bold">
+                {userData?.profilePhoto ? (
+                  <img
+                    src={userData.profilePhoto}
+                    alt={userData.fullName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  userData?.fullName?.charAt(0) || "C"
+                )}
+              </div>
+
+              <div className="hidden text-left sm:block">
+                <p className="text-sm font-bold text-slate-900 leading-none">
+                  {userData?.fullName}
+                </p>
+                <p className="text-xs text-slate-500">{userData?.email}</p>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="ml-2 rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
+                title="Log Out"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Banner Card */}
+        <div className="relative overflow-hidden rounded-3xl bg-slate-900 p-6 text-white shadow-xl sm:p-8">
+          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-emerald-600/20 blur-3xl" />
+          <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-5">
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 border-white/20 bg-slate-800 text-2xl font-bold text-white flex items-center justify-center shadow-md">
+                {userData?.profilePhoto ? (
+                  <img
+                    src={userData.profilePhoto}
+                    alt={userData.fullName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  userData?.fullName?.charAt(0) || "C"
+                )}
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold text-white sm:text-3xl">
+                    {userData?.fullName}
+                  </h1>
+                  <span className="rounded-md bg-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-300 border border-emerald-400/30">
+                    Client / Hirer
+                  </span>
+                </div>
+
+                <p className="mt-1 text-sm text-slate-300">
+                  {client.servicesInterested || "Freelance Hiring Client"}
+                </p>
+
+                <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-400">
+                  <span className="flex items-center gap-1">
+                    <MapPin size={14} className="text-emerald-400" />
+                    {userData?.location || "Location not set"}
+                  </span>
+                  <span className="flex items-center gap-1 font-semibold text-emerald-300">
+                    <DollarSign size={14} />
+                    Budget: {client.budgetRange || "Flexible"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setActiveTab("overview")}
+                className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeTab === "overview"
+                    ? "bg-emerald-600 text-white shadow-md"
+                    : "bg-white/10 text-slate-200 hover:bg-white/15"
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab("edit")}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeTab === "edit"
+                    ? "bg-emerald-600 text-white shadow-md"
+                    : "bg-white/10 text-slate-200 hover:bg-white/15"
+                }`}
+              >
+                <Edit size={16} />
+                Edit Profile
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Notifications */}
+        {message.text && (
+          <div
+            className={`mt-6 rounded-2xl p-4 text-sm font-medium ${
+              message.type === "success"
+                ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        {/* TAB 1: OVERVIEW */}
+        {activeTab === "overview" && (
+          <div className="mt-8 grid gap-8 lg:grid-cols-3">
+            {/* Left Column: Client Details */}
+            <div className="space-y-6 lg:col-span-2">
+              {/* Project & Hiring Preferences */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">
+                  <BriefcaseBusiness className="text-emerald-600" size={20} />
+                  Hiring & Project Preferences
+                </h3>
+
+                <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      Services Interested In
+                    </p>
+                    <p className="mt-1 font-semibold text-slate-800">
+                      {client.servicesInterested || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      Project Categories
+                    </p>
+                    <p className="mt-1 font-semibold text-slate-800">
+                      {client.projectCategories || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      Typical Budget Range
+                    </p>
+                    <p className="mt-1 font-semibold text-emerald-700">
+                      {client.budgetRange || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      Preferred Freelancer Skills
+                    </p>
+                    <p className="mt-1 font-semibold text-slate-800">
+                      {client.preferredSkills || "Not specified"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 border-t border-slate-100 pt-5">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Hiring Description
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {client.hiringDescription || "No hiring description provided yet."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Freelance Opportunities Action Card */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <Users className="text-emerald-600" size={20} />
+                    Hire Student Freelancers
+                  </h3>
+
+                  <Link
+                    to="/freelancing"
+                    className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition"
+                  >
+                    <PlusCircle size={15} />
+                    Find Freelancers
+                  </Link>
+                </div>
+
+                <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center border border-dashed border-slate-200">
+                  <Code2 size={36} className="mx-auto text-slate-400" />
+                  <h4 className="mt-3 font-bold text-slate-800">Post a Freelance Project</h4>
+                  <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                    Connect with skilled students specializing in Web Development, Graphic Design, Content Writing, and more.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Contact Info */}
+            <div className="space-y-6">
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">
+                  Account Contact Info
+                </h3>
+
+                <div className="mt-5 space-y-4 text-sm">
+                  <div className="flex items-center gap-3">
+                    <Users size={18} className="text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400">Name</p>
+                      <p className="font-semibold text-slate-800">{userData?.fullName}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <Mail size={18} className="text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400">Email Address</p>
+                      <p className="font-semibold text-slate-800">{userData?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <Phone size={18} className="text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400">Phone</p>
+                      <p className="font-semibold text-slate-800">{userData?.phone || "N/A"}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <MapPin size={18} className="text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-400">Location</p>
+                      <p className="font-semibold text-slate-800">{userData?.location || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: EDIT PROFILE */}
+        {activeTab === "edit" && (
+          <form onSubmit={handleSaveProfile} className="mt-8 max-w-4xl space-y-8">
+            {/* Base Contact Info */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">
+                Personal & Contact Info
+              </h3>
+
+              <div className="mt-6 space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Profile Avatar
+                  </label>
+                  <div className="mt-3 flex items-center gap-5">
+                    <div className="h-16 w-16 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-xl">
+                      {formData.profilePhoto ? (
+                        <img
+                          src={formData.profilePhoto}
+                          alt="Preview"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        "Avatar"
+                      )}
+                    </div>
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                      <Upload size={16} />
+                      Choose Avatar
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.fullName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, fullName: e.target.value })
+                      }
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Location / City
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) =>
+                        setFormData({ ...formData, location: e.target.value })
+                      }
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hiring Preferences */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">
+                Hiring Preferences
+              </h3>
+
+              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Services Interested In
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.servicesInterested}
+                    onChange={(e) =>
+                      setFormData({ ...formData, servicesInterested: e.target.value })
+                    }
+                    placeholder="e.g. Web Development, Logo Design"
+                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Project Categories
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.projectCategories}
+                    onChange={(e) =>
+                      setFormData({ ...formData, projectCategories: e.target.value })
+                    }
+                    placeholder="e.g. Mobile Apps, Marketing"
+                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Budget Range
+                  </label>
+                  <select
+                    value={formData.budgetRange}
+                    onChange={(e) =>
+                      setFormData({ ...formData, budgetRange: e.target.value })
+                    }
+                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
+                    required
+                  >
+                    <option value="">Select Budget Range</option>
+                    <option value="< $500">&lt; $500</option>
+                    <option value="$500 - $1000">$500 - $1000</option>
+                    <option value="$1000 - $5000">$1000 - $5000</option>
+                    <option value="$5000+">$5000+</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Preferred Freelancer Skills
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.preferredSkills}
+                    onChange={(e) =>
+                      setFormData({ ...formData, preferredSkills: e.target.value })
+                    }
+                    placeholder="e.g. React, Node.js, UI Design"
+                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Hiring Description
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.hiringDescription}
+                    onChange={(e) =>
+                      setFormData({ ...formData, hiringDescription: e.target.value })
+                    }
+                    placeholder="Describe what kind of talent or projects you are looking to hire for..."
+                    className="mt-2 w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-4">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3.5 font-semibold text-white shadow-lg transition hover:bg-emerald-700 disabled:opacity-50"
+              >
+                <Save size={18} />
+                {saving ? "Saving Changes..." : "Save Client Profile"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("overview")}
+                className="rounded-xl border border-slate-300 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default ClientDashboard;
