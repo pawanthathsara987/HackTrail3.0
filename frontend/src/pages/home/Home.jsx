@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -26,6 +26,7 @@ import {
 
 const Home = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
 
@@ -41,6 +42,25 @@ const Home = () => {
       setUser(null);
     }
   }, []);
+
+  useEffect(() => {
+    if (location.state?.scrollTo) {
+      const element = document.getElementById(location.state.scrollTo);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" });
+        }, 150);
+      }
+    }
+  }, [location.state]);
+
+  const handleSectionClick = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+    setMobileMenuOpen(false);
+  };
 
   const getDashboardPath = (role) => {
     if (role === "job_poster") return "/job-poster/dashboard";
@@ -94,12 +114,27 @@ const Home = () => {
               to="/training"
               label="Training Programs"
             />
-            <NavLink
-              to="/how-it-works"
-              label="How It Works"
-            />
-            <NavLink to="/about" label="About" />
-            <NavLink to="/contact" label="Contact" />
+            <button
+              type="button"
+              onClick={() => handleSectionClick("how-it-works")}
+              className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            >
+              How It Works
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSectionClick("about")}
+              className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            >
+              About
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSectionClick("contact")}
+              className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            >
+              Contact
+            </button>
           </nav>
 
           {/* Desktop Actions */}
@@ -417,7 +452,7 @@ const Home = () => {
             HOW IT WORKS
         ====================================================== */}
 
-        <section className="bg-slate-50 px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <section id="how-it-works" className="bg-slate-50 px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
           <div className="mx-auto max-w-7xl">
 
             <SectionHeader
@@ -462,7 +497,7 @@ const Home = () => {
             STUDENT FOCUSED
         ====================================================== */}
 
-        <section className="px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <section id="about" className="px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
           <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-2">
 
             <div>
@@ -727,7 +762,7 @@ const Home = () => {
           FOOTER
       ====================================================== */}
 
-      <footer className="border-t border-slate-100 bg-white">
+      <footer id="contact" className="border-t border-slate-100 bg-white">
         <div className="mx-auto max-w-7xl px-5 py-14 sm:px-6 lg:px-8">
 
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">

@@ -6,8 +6,9 @@ const Footer = () => {
   const location = useLocation();
   const currentYear = new Date().getFullYear();
 
-  // Hide global footer on dashboard views or full-screen auth pages if needed
+  // Hide global footer on Home page (which has its own footer) or dashboard views
   if (
+    location.pathname === "/" ||
     location.pathname.startsWith("/student/dashboard") ||
     location.pathname.startsWith("/job-poster/dashboard") ||
     location.pathname.startsWith("/client/dashboard")
