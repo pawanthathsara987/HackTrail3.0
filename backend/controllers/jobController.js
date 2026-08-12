@@ -241,13 +241,56 @@ export const toggleBookmark = async (req, res) => {
 
     if (existing) {
       await existing.destroy();
-      return res.status(200).json({ bookmarked: false, message: "Job removed from bookmarks." });
+      return res.status(200).json({ bookmarked: false, isSaved: false, message: "Job removed from bookmarks." });
     } else {
       await JobBookmark.create({ jobId: id, userId });
-      return res.status(201).json({ bookmarked: true, message: "Job saved to bookmarks." });
+      return res.status(201).json({ bookmarked: true, isSaved: true, message: "Job saved to bookmarks." });
     }
   } catch (error) {
     console.error("Error toggling bookmark:", error);
     return res.status(500).json({ message: error.message || "Server error." });
   }
 };
+
+// @desc    Get jobs posted by current authenticated job poster
+// @route   GET /api/jobs/my-jobs
+// @access  Private (Job Poster)
+export const getMyJobs = async (req, res) => {
+  try {
+    const jobPosterId = req.user.id;
+    const jobs = await Job.findAll({
+      where: { jobPosterId },
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({ jobs });
+  } catch (error) {
+    console.error("Error fetching poster jobs:", error);
+    return res.status(500).json({ message: error.message || "Server error fetching poster jobs." });
+  }
+};
+
+// @desc    Delete a job posting
+// @route   DELETE /api/jobs/:id
+// @access  Private (Job Poster)
+export const deleteJob = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const job = await Job.findByPk(id);
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found." });
+    }
+
+    if (job.jobPosterId !== req.user.id && req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Not authorized to delete this job." });
+    }
+
+    await job.destroy();
+    return res.status(200).json({ message: "Job deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting job:", error);
+    return res.status(500).json({ message: error.message || "Server error deleting job." });
+  }
+};
+
