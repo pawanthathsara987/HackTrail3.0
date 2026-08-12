@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import { FreelanceProject, FreelanceProposal, User } from "../models/index.js";
-import { uploadToSupabase } from "../services/uploadService.js";
+import { uploadToSupabase, uploadBase64ToSupabase } from "../services/uploadService.js";
 
 // @desc    Get all freelance projects with search, filtering & pagination
 // @route   GET /api/freelance-projects
@@ -13,6 +13,8 @@ export const getProjects = async (req, res) => {
       skills,
       budget,
       projectType,
+      postType,
+      clientId,
       deadline,
       page = 1,
       limit = 10,
@@ -23,7 +25,12 @@ export const getProjects = async (req, res) => {
     const limitNum = parseInt(limit, 10) || 10;
     const offset = (pageNum - 1) * limitNum;
 
-    const whereClause = { status: "open" };
+    const whereClause = {};
+    if (clientId) {
+      whereClause.clientId = clientId;
+    } else {
+      whereClause.status = "open";
+    }
 
     if (search && search.trim()) {
       const query = `%${search.trim()}%`;
@@ -41,6 +48,10 @@ export const getProjects = async (req, res) => {
 
     if (projectType) {
       whereClause.projectType = projectType;
+    }
+
+    if (postType) {
+      whereClause.postType = postType;
     }
 
     if (budget) {
@@ -92,7 +103,7 @@ export const getProjectById = async (req, res) => {
         {
           model: User,
           as: "client",
-          attributes: ["id", "fullName", "email", "phone", "location", "profilePhoto"],
+          attributes: ["id", "fullName", "email", "phone", "location", "profilePhoto", "role"],
         },
       ],
     });
@@ -119,9 +130,9 @@ export const getProjectById = async (req, res) => {
   }
 };
 
-// @desc    Create a new freelance project
+// @desc    Create a new freelance project or student skill gig (Fiverr style)
 // @route   POST /api/freelance-projects
-// @access  Private (Client)
+// @access  Private (Client / Student)
 export const createProject = async (req, res) => {
   try {
     const {
@@ -129,12 +140,15 @@ export const createProject = async (req, res) => {
       clientName,
       category,
       projectType,
+      postType,
       budget,
       budgetMin,
       budgetMax,
       deadline,
       description,
       skillsRequired,
+      projectImage,
+      deliverables,
     } = req.body;
 
     if (!title || !category || !budget || !description) {
@@ -143,19 +157,36 @@ export const createProject = async (req, res) => {
         .json({ message: "Please fill in all required project fields." });
     }
 
+    let finalProjectImage = null;
+    if (projectImage) {
+      if (typeof projectImage === "string" && projectImage.startsWith("data:image")) {
+        try {
+          finalProjectImage = await uploadBase64ToSupabase(projectImage);
+        } catch (uploadErr) {
+          console.error("Project image upload to Supabase failed:", uploadErr);
+        }
+      } else if (typeof projectImage === "string") {
+        finalProjectImage = projectImage;
+      }
+    }
+
     const project = await FreelanceProject.create({
       clientId: req.user ? req.user.id : null,
       title,
       clientName: clientName || (req.user ? req.user.fullName : "Client"),
       clientLocation: req.user ? req.user.location : null,
+      posterRole: req.user ? req.user.role : "client",
+      postType: postType || (req.user && req.user.role === "student" ? "gig" : "project"),
       category,
       projectType: projectType || "Fixed Price",
       budget,
       budgetMin: budgetMin || null,
       budgetMax: budgetMax || null,
-      deadline: deadline || "2 Weeks",
+      deadline: deadline || "2 Days",
       description,
       skillsRequired: Array.isArray(skillsRequired) ? skillsRequired : [],
+      deliverables: Array.isArray(deliverables) ? deliverables : [],
+      projectImage: finalProjectImage,
       status: "open",
     });
 
@@ -173,7 +204,7 @@ export const createProject = async (req, res) => {
 
 // @desc    Submit proposal for freelance project
 // @route   POST /api/freelance-projects/:id/proposals
-// @access  Private (Student)
+// @access  Private (Authenticated Users)
 export const submitProposal = async (req, res) => {
   try {
     const { id } = req.params;
@@ -183,6 +214,12 @@ export const submitProposal = async (req, res) => {
     const project = await FreelanceProject.findByPk(id);
     if (!project) {
       return res.status(404).json({ message: "Freelance project not found." });
+    }
+
+    if (project.clientId === req.user.id) {
+      return res
+        .status(400)
+        .json({ message: "You cannot submit a proposal for your own project." });
     }
 
     const existingProposal = await FreelanceProposal.findOne({
@@ -231,5 +268,100 @@ export const submitProposal = async (req, res) => {
     return res
       .status(500)
       .json({ message: error.message || "Server error submitting proposal." });
+  }
+};
+
+// @desc    Update a freelance project / gig
+// @route   PUT /api/freelance-projects/:id
+// @access  Private (Owner / Client / Student)
+export const updateProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await FreelanceProject.findByPk(id);
+
+    if (!project) {
+      return res.status(404).json({ message: "Freelance post not found." });
+    }
+
+    if (req.user && project.clientId && project.clientId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to update this post." });
+    }
+
+    const {
+      title,
+      category,
+      projectType,
+      budget,
+      budgetMin,
+      budgetMax,
+      deadline,
+      description,
+      skillsRequired,
+      deliverables,
+      projectImage,
+    } = req.body;
+
+    let finalProjectImage = project.projectImage;
+    if (projectImage) {
+      if (typeof projectImage === "string" && projectImage.startsWith("data:image")) {
+        try {
+          finalProjectImage = await uploadBase64ToSupabase(projectImage);
+        } catch (uploadErr) {
+          console.error("Project image upload failed:", uploadErr);
+        }
+      } else if (typeof projectImage === "string") {
+        finalProjectImage = projectImage;
+      }
+    }
+
+    await project.update({
+      title: title || project.title,
+      category: category || project.category,
+      projectType: projectType || project.projectType,
+      budget: budget || project.budget,
+      budgetMin: budgetMin !== undefined ? budgetMin : project.budgetMin,
+      budgetMax: budgetMax !== undefined ? budgetMax : project.budgetMax,
+      deadline: deadline || project.deadline,
+      description: description || project.description,
+      skillsRequired: Array.isArray(skillsRequired) ? skillsRequired : project.skillsRequired,
+      deliverables: Array.isArray(deliverables) ? deliverables : project.deliverables,
+      projectImage: finalProjectImage,
+    });
+
+    return res.status(200).json({
+      message: "Freelance post updated successfully.",
+      project,
+    });
+  } catch (error) {
+    console.error("Error updating project:", error);
+    return res.status(500).json({ message: error.message || "Server error updating post." });
+  }
+};
+
+// @desc    Delete a freelance project / gig
+// @route   DELETE /api/freelance-projects/:id
+// @access  Private (Owner / Client / Student)
+export const deleteProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await FreelanceProject.findByPk(id);
+
+    if (!project) {
+      return res.status(404).json({ message: "Freelance post not found." });
+    }
+
+    if (req.user && project.clientId && project.clientId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this post." });
+    }
+
+    await project.destroy();
+
+    return res.status(200).json({
+      message: "Freelance post deleted successfully.",
+      id,
+    });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    return res.status(500).json({ message: error.message || "Server error deleting post." });
   }
 };

@@ -18,6 +18,41 @@ import StudentDashboard from './pages/dashboards/StudentDashboard';
 import JobPosterDashboard from './pages/dashboards/JobPosterDashboard';
 import ClientDashboard from './pages/dashboards/ClientDashboard';
 
+const getUser = () => {
+  try {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+const getRoleDashboard = (role) => {
+  if (role === "job_poster") return "/job-poster/dashboard";
+  if (role === "client") return "/client/dashboard";
+  return "/student/dashboard";
+};
+
+// Route Guard for Guests Only (Login & Register)
+const GuestRoute = ({ children }) => {
+  const user = getUser();
+  if (user) {
+    return <Navigate to={getRoleDashboard(user.role)} replace />;
+  }
+  return children;
+};
+
+// Route Guard for Role Specific Dashboards
+const ProtectedRoute = ({ allowedRoles, children }) => {
+  const user = getUser();
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to={getRoleDashboard(user.role)} replace />;
+  }
+  return children;
+};
 
 function App() {
   return (
@@ -34,9 +69,23 @@ function App() {
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
 
-            {/* Authentication Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            {/* Authentication Routes (Guest Only - hidden/redirected if logged in) */}
+            <Route
+              path="/login"
+              element={
+                <GuestRoute>
+                  <Login />
+                </GuestRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <GuestRoute>
+                  <Register />
+                </GuestRoute>
+              }
+            />
 
             {/* Part-Time Job Routes */}
             <Route path="/part-time-jobs" element={<PartTimeJobs />} />
@@ -47,13 +96,34 @@ function App() {
             <Route path="/training/:id" element={<TrainingDetails />} />
 
             {/* Freelancing Routes */}
-            <Route path="/freelancing" element={<Freelancing />} />
-            <Route path="/freelancing/:id" element={<FreelanceProjectDetails />} />
+            <Route path="/freelancing" element={<Freelancing user={getUser()} />} />
+            <Route path="/freelancing/:id" element={<FreelanceProjectDetails user={getUser()} />} />
 
-            {/* Role Profile & Dashboard Routes */}
-            <Route path="/student/dashboard" element={<StudentDashboard />} />
-            <Route path="/job-poster/dashboard" element={<JobPosterDashboard />} />
-            <Route path="/client/dashboard" element={<ClientDashboard />} />
+            {/* Role Profile & Dashboard Routes (Protected per role) */}
+            <Route
+              path="/student/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/job-poster/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["job_poster"]}>
+                  <JobPosterDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/client/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Catch-all fallback redirecting to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
