@@ -63,9 +63,12 @@ const Header = () => {
         {/* Desktop Navigation Links */}
         <nav className="hidden items-center gap-7 md:flex">
           <Link
-            to="/login"
-            className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-
+            to="/"
+            className={`text-sm font-medium transition ${
+              location.pathname === "/"
+                ? "text-blue-600 font-bold"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
           >
             Home
           </Link>
