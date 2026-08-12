@@ -19,16 +19,21 @@ import {
   Code2,
   Clock,
   ArrowRight,
+  Zap,
+  Plus,
+  Eye,
+  Trash2,
 } from "lucide-react";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "edit"
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "gigs" | "edit"
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const [userData, setUserData] = useState(null);
+  const [myGigs, setMyGigs] = useState([]);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -75,6 +80,9 @@ const StudentDashboard = () => {
       const user = data.user;
       setUserData(user);
 
+      // Fetch student's posted gigs
+      fetchMyGigs(user.id);
+
       const student = user.studentProfile || {};
 
       setFormData({
@@ -98,6 +106,40 @@ const StudentDashboard = () => {
       setMessage({ type: "error", text: err.message });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMyGigs = async (userId) => {
+    try {
+      const response = await fetch(`/api/freelance-projects?clientId=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyGigs(data.projects || data.data || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch my gigs:", e);
+    }
+  };
+
+  const handleDeleteGig = async (gigId) => {
+    if (!window.confirm("Are you sure you want to delete this posted gig?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/freelance-projects/${gigId}`, {
+        method: "DELETE",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (response.ok) {
+        setMyGigs((prev) => prev.filter((g) => g.id !== gigId && g._id !== gigId));
+      } else {
+        const errData = await response.json();
+        alert(errData.message || "Failed to delete gig.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error deleting gig.");
     }
   };
 
@@ -281,7 +323,7 @@ const StudentDashboard = () => {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={() => setActiveTab("overview")}
                 className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
@@ -292,6 +334,19 @@ const StudentDashboard = () => {
               >
                 Overview
               </button>
+
+              <button
+                onClick={() => setActiveTab("gigs")}
+                className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeTab === "gigs"
+                    ? "bg-emerald-600 text-white shadow-md"
+                    : "bg-white/10 text-slate-200 hover:bg-white/15"
+                }`}
+              >
+                <Zap size={16} className="text-amber-400 fill-amber-400" />
+                My Posted Gigs ({myGigs.length})
+              </button>
+
               <button
                 onClick={() => setActiveTab("edit")}
                 className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
@@ -483,16 +538,39 @@ const StudentDashboard = () => {
               </div>
 
               {/* Explore Actions */}
-              <div className="rounded-3xl bg-blue-600 p-6 text-white shadow-lg">
-                <h3 className="text-lg font-bold">Ready to Start Earning?</h3>
-                <p className="mt-2 text-sm text-blue-100">
-                  Discover flexible part-time jobs and freelance opportunities tailored for students.
+              <div className="rounded-3xl bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 p-6 text-white shadow-xl">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={20} className="text-amber-400" />
+                  <h3 className="text-lg font-bold">Ready to Start Earning?</h3>
+                </div>
+                <p className="mt-2 text-sm text-slate-300">
+                  Offer your skills by posting a freelance service/task or explore active part-time jobs & projects.
                 </p>
 
                 <div className="mt-6 flex flex-col gap-3">
+                  <button
+                    onClick={() =>
+                      navigate("/freelancing", {
+                        state: { openPostModal: true },
+                      })
+                    }
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-3 font-bold text-slate-950 hover:from-amber-300 hover:to-amber-400 transition shadow-md w-full"
+                  >
+                    + Post Freelance Task / Service
+                    <ArrowRight size={16} />
+                  </button>
+
+                  <Link
+                    to="/freelancing"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-semibold text-white hover:bg-white/20 transition"
+                  >
+                    Browse Freelance Projects
+                    <ArrowRight size={16} />
+                  </Link>
+
                   <Link
                     to="/part-time-jobs"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 font-semibold text-blue-600 hover:bg-blue-50 transition"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-semibold text-white hover:bg-white/20 transition"
                   >
                     Browse Part-Time Jobs
                     <ArrowRight size={16} />
@@ -500,9 +578,10 @@ const StudentDashboard = () => {
 
                   <Link
                     to="/training"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-4 py-3 font-semibold text-white hover:bg-white/10 transition"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-semibold text-white hover:bg-white/20 transition"
                   >
                     View Training Programs
+                    <ArrowRight size={16} />
                   </Link>
                 </div>
               </div>
@@ -510,7 +589,123 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {/* TAB 2: EDIT PROFILE */}
+        {/* TAB 2: MY POSTED GIGS */}
+        {activeTab === "gigs" && (
+          <div className="mt-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <Zap size={22} className="text-amber-500 fill-amber-400" />
+                  My Posted Freelance Services & Gigs
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Manage your active freelance posts, track orders, and publish new skills.
+                </p>
+              </div>
+
+              <button
+                onClick={() =>
+                  navigate("/freelancing", {
+                    state: { openPostModal: true },
+                  })
+                }
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white shadow-md hover:bg-emerald-700 transition"
+              >
+                <Plus size={18} />
+                + Post New Skill / Gig
+              </button>
+            </div>
+
+            {myGigs.length === 0 ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                <Zap size={48} className="mx-auto text-amber-400" />
+                <h3 className="mt-4 text-lg font-bold text-slate-800">
+                  You haven't posted any freelance gigs yet
+                </h3>
+                <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">
+                  Showcase your skills to potential clients and start earning money today.
+                </p>
+                <button
+                  onClick={() =>
+                    navigate("/freelancing", {
+                      state: { openPostModal: true },
+                    })
+                  }
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 font-bold text-white hover:bg-emerald-600 transition"
+                >
+                  <Plus size={18} />
+                  Post Your First Skill Gig
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {myGigs.map((gig) => (
+                  <div
+                    key={gig.id}
+                    className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition"
+                  >
+                    <div>
+                      {gig.projectImage && (
+                        <div className="mb-4 h-36 w-full overflow-hidden rounded-2xl bg-slate-100">
+                          <img
+                            src={gig.projectImage}
+                            alt={gig.title}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                          {gig.category}
+                        </span>
+
+                        <span className="font-extrabold text-emerald-600 text-sm">
+                          {gig.budget}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-3 text-base font-bold text-slate-900 line-clamp-2">
+                        {gig.title}
+                      </h3>
+
+                      <p className="mt-2 text-xs text-slate-500 line-clamp-2">
+                        {gig.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-5 border-t border-slate-100 pt-4 flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-slate-500">
+                        Proposals: <strong className="text-slate-800">{gig.proposalsCount || 0}</strong>
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <Link
+                          to={`/freelancing/${gig.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800"
+                        >
+                          <Eye size={14} />
+                          View
+                        </Link>
+
+                        <button
+                          onClick={() => handleDeleteGig(gig.id)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800"
+                          title="Delete Gig"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: EDIT PROFILE */}
         {activeTab === "edit" && (
           <form onSubmit={handleSaveProfile} className="mt-8 max-w-4xl space-y-8">
             {/* Photo & General */}

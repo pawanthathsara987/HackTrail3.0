@@ -5,6 +5,8 @@ import {
   getProjectById,
   createProject,
   submitProposal,
+  updateProject,
+  deleteProject,
 } from "../controllers/freelanceController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -28,6 +30,8 @@ const optionalAuth = (req, res, next) => {
 router.get("/", getProjects);
 router.get("/:id", optionalAuth, getProjectById);
 router.post("/", protect, createProject);
+router.put("/:id", protect, updateProject);
+router.delete("/:id", protect, deleteProject);
 router.post("/:id/proposals", protect, upload.single("attachment"), submitProposal);
 router.post("/:id/proposal", protect, upload.single("attachment"), submitProposal);
 

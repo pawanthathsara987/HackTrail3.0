@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -20,11 +20,40 @@ import {
   BarChart3,
   Menu,
   X,
+  User,
+  LogOut,
 } from "lucide-react";
-import { useState } from "react";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        setUser(null);
+      }
+    } catch (e) {
+      setUser(null);
+    }
+  }, []);
+
+  const getDashboardPath = (role) => {
+    if (role === "job_poster") return "/job-poster/dashboard";
+    if (role === "client") return "/client/dashboard";
+    return "/student/dashboard";
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -75,19 +104,41 @@ const Home = () => {
 
           {/* Desktop Actions */}
           <div className="hidden items-center gap-3 lg:flex">
-            <Link
-              to="/login"
-              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              Login
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <Link
+                  to={getDashboardPath(user.role)}
+                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+                >
+                  <User size={16} className="text-blue-600" />
+                  <span>Dashboard</span>
+                </Link>
 
-            <Link
-              to="/register"
-              className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Get Started
-            </Link>
+                <button
+                  onClick={handleLogout}
+                  className="rounded-xl p-2.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
+                  title="Log Out"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  to="/register"
+                  className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -153,21 +204,33 @@ const Home = () => {
               />
 
               <div className="mt-4 flex gap-3 border-t border-slate-100 pt-4">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex-1 rounded-xl border border-slate-200 py-3 text-center text-sm font-semibold text-slate-700"
-                >
-                  Login
-                </Link>
+                {user ? (
+                  <Link
+                    to={getDashboardPath(user.role)}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 rounded-xl bg-slate-900 py-3 text-center text-sm font-semibold text-white"
+                  >
+                    My Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 rounded-xl border border-slate-200 py-3 text-center text-sm font-semibold text-slate-700"
+                    >
+                      Login
+                    </Link>
 
-                <Link
-                  to="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex-1 rounded-xl bg-slate-900 py-3 text-center text-sm font-semibold text-white"
-                >
-                  Get Started
-                </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 rounded-xl bg-slate-900 py-3 text-center text-sm font-semibold text-white"
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </div>

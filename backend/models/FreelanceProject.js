@@ -35,6 +35,11 @@ const FreelanceProject = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    posterRole: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "client",
+    },
     category: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -65,6 +70,20 @@ const FreelanceProject = sequelize.define(
       allowNull: false,
     },
     skillsRequired: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: [],
+    },
+    projectImage: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    postType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "gig",
+    },
+    deliverables: {
       type: DataTypes.JSON,
       allowNull: true,
       defaultValue: [],

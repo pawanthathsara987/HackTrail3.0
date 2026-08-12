@@ -78,7 +78,8 @@ const FreelanceProjectDetails = ({ user }) => {
       return;
     }
 
-    if (user.role !== "Student") {
+    if (project && project.clientId === user.id) {
+      alert("You cannot submit a proposal for your own project.");
       return;
     }
 
@@ -108,12 +109,10 @@ const FreelanceProjectDetails = ({ user }) => {
 
     if (!form.proposedPrice) {
       errors.proposedPrice = "Proposed price is required.";
-    } else if (Number(form.proposedPrice) <= 0) {
-      errors.proposedPrice = "Enter a valid proposed price.";
     }
 
     if (!form.deliveryTime.trim()) {
-      errors.deliveryTime = "Estimated delivery time is required.";
+      errors.deliveryTime = "Delivery time is required.";
     }
 
     if (!form.relevantSkills.trim()) {
@@ -130,10 +129,6 @@ const FreelanceProjectDetails = ({ user }) => {
 
     if (!user) {
       navigate("/login");
-      return;
-    }
-
-    if (user.role !== "Student") {
       return;
     }
 
@@ -156,12 +151,16 @@ const FreelanceProjectDetails = ({ user }) => {
         formData.append("attachment", form.attachment);
       }
 
+      const token = localStorage.getItem("token");
+
       const response = await fetch(
         `/api/freelance-projects/${id}/proposals`,
         {
           method: "POST",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: formData,
-          credentials: "include",
         }
       );
 
@@ -198,27 +197,35 @@ const FreelanceProjectDetails = ({ user }) => {
   };
 
   const formatDate = (date) => {
-    if (!date) return "Not specified";
-
-    return new Date(date).toLocaleDateString();
+    if (!date) return "Flexible";
+    if (typeof date === "string" && !date.includes("-")) return date;
+    const parsed = new Date(date);
+    if (isNaN(parsed.getTime())) return date;
+    return parsed.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
-  const getClient = () => {
-    return (
-      project?.client ||
-      project?.clientInfo ||
-      {
-        name: project?.clientName,
-        profileImage: project?.clientProfileImage,
-        location: project?.clientLocation,
-        projects: project?.clientProjects,
-        rating: project?.clientRating,
-        id: project?.clientId,
-      }
-    );
+  const getCreatorInfo = () => {
+    const creatorUser = project?.client;
+    const isStudentSeller =
+      project?.posterRole === "student" ||
+      project?.postType === "gig" ||
+      creatorUser?.role === "student";
+
+    return {
+      isStudent: isStudentSeller,
+      title: isStudentSeller ? "About the Student Freelancer" : "About the Employer / Client",
+      name: creatorUser?.fullName || project?.clientName || (isStudentSeller ? "Student Seller" : "Client"),
+      profilePhoto: creatorUser?.profilePhoto || project?.clientProfileImage || null,
+      location: creatorUser?.location || project?.clientLocation || "Location not set",
+      rating: project?.clientRating || 5.0,
+    };
   };
 
-  const client = getClient();
+  const creator = getCreatorInfo();
 
   // Loading
   if (loading) {
@@ -379,9 +386,11 @@ const FreelanceProjectDetails = ({ user }) => {
                     <User size={18} />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Client</p>
+                    <p className="text-xs text-gray-500">
+                      {creator.isStudent ? "Student Seller" : "Client"}
+                    </p>
                     <p className="font-medium text-gray-800">
-                      {client?.name || "Client"}
+                      {creator.name}
                     </p>
                   </div>
                 </div>
@@ -456,78 +465,70 @@ const FreelanceProjectDetails = ({ user }) => {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            {/* Client */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-gray-900">
-                About the Client
-              </h2>
+            {/* Creator / Seller Info Card */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h2 className="text-base font-bold text-gray-900">
+                  {creator.title}
+                </h2>
+                {creator.isStudent && (
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                    Student Seller
+                  </span>
+                )}
+              </div>
 
               <div className="mt-5 flex items-center gap-4">
-                {client?.profileImage ? (
+                {creator.profilePhoto ? (
                   <img
-                    src={client.profileImage}
-                    alt={client.name}
-                    className="h-14 w-14 rounded-full object-cover"
+                    src={creator.profilePhoto}
+                    alt={creator.name}
+                    className="h-14 w-14 rounded-full object-cover border-2 border-emerald-500/20"
                   />
                 ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                    <User size={25} />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-lg">
+                    {creator.name?.charAt(0) || "S"}
                   </div>
                 )}
 
                 <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {client?.name || "Client"}
+                  <h3 className="font-bold text-gray-900 text-sm">
+                    {creator.name}
                   </h3>
 
-                  {client?.location && (
-                    <div className="mt-1 flex items-center gap-1 text-sm text-gray-500">
-                      <MapPin size={14} />
-                      {client.location}
+                  {creator.location && (
+                    <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                      <MapPin size={14} className="text-gray-400" />
+                      {creator.location}
                     </div>
                   )}
                 </div>
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-gray-50 p-3 text-center">
-                  <p className="text-lg font-bold text-gray-900">
-                    {client?.projects ?? 0}
+                <div className="rounded-xl bg-gray-50 p-3 text-center">
+                  <p className="text-sm font-bold text-gray-900">
+                    {creator.isStudent ? "Student" : "Client"}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    Projects
-                  </p>
+                  <p className="text-[11px] text-gray-500">Role</p>
                 </div>
 
-                <div className="rounded-lg bg-gray-50 p-3 text-center">
+                <div className="rounded-xl bg-gray-50 p-3 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star
-                      size={15}
-                      className="fill-current text-yellow-500"
+                      size={14}
+                      className="fill-amber-400 text-amber-400"
                     />
-                    <span className="font-bold">
-                      {client?.rating ?? "N/A"}
+                    <span className="font-bold text-sm">
+                      {creator.rating}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Rating
-                  </p>
+                  <p className="text-[11px] text-gray-500">Rating</p>
                 </div>
               </div>
-
-              {client?.id && (
-                <button
-                  onClick={() =>
-                    navigate(`/clients/${client.id}`)
-                  }
-                  className="mt-5 w-full rounded-lg border border-indigo-600 px-4 py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-50"
-                >
-                  View Client Profile
-                </button>
-              )}
             </div>
 
-            {/* Proposal Card */}
+            {/* Proposal / Action Card */}
             <div className="rounded-2xl bg-white p-6 shadow-sm">
               {alreadySubmitted ? (
                 <div className="rounded-xl bg-green-50 p-4 text-center">
@@ -539,23 +540,42 @@ const FreelanceProjectDetails = ({ user }) => {
                     You have already submitted a proposal for this project.
                   </p>
                 </div>
-              ) : user?.role === "Client" ||
-                user?.role === "Job Poster" ? (
-                <div className="rounded-xl bg-gray-50 p-4 text-center">
-                  <p className="font-semibold text-gray-700">
-                    Applying is unavailable
+              ) : user?.role === "student" ? (
+                <div className="rounded-xl bg-indigo-50/70 p-4 text-center border border-indigo-100">
+                  <p className="font-bold text-indigo-900 text-sm">
+                    Student View Mode
                   </p>
 
-                  <p className="mt-1 text-sm text-gray-500">
-                    Clients and job posters cannot submit proposals.
+                  <p className="mt-1 text-xs text-indigo-700">
+                    {project.clientId === user?.id
+                      ? "You are the owner of this freelance post."
+                      : "Students offer skills & gigs. Clients and employers can apply or hire."}
                   </p>
+
+                  {project.clientId === user?.id && (
+                    <button
+                      onClick={async () => {
+                        if (window.confirm("Are you sure you want to delete this post?")) {
+                          const token = localStorage.getItem("token");
+                          const res = await fetch(`/api/freelance-projects/${project.id}`, {
+                            method: "DELETE",
+                            headers: token ? { Authorization: `Bearer ${token}` } : {},
+                          });
+                          if (res.ok) navigate("/freelancing");
+                        }
+                      }}
+                      className="mt-4 w-full rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-red-700 transition"
+                    >
+                      Delete My Post
+                    </button>
+                  )}
                 </div>
               ) : (
                 <button
                   onClick={handleProposalClick}
-                  className="w-full rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700"
+                  className="w-full rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white transition hover:bg-emerald-700 shadow-md"
                 >
-                  Submit Proposal
+                  Hire Student / Submit Proposal
                 </button>
               )}
             </div>
