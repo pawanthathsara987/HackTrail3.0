@@ -70,6 +70,7 @@ const Home = () => {
               label="How It Works"
             />
             <NavLink to="/about" label="About" />
+            <NavLink to="/contact" label="Contact" />
           </nav>
 
           {/* Desktop Actions */}
@@ -142,6 +143,12 @@ const Home = () => {
               <MobileNavLink
                 to="/about"
                 label="About"
+                closeMenu={() => setMobileMenuOpen(false)}
+              />
+
+              <MobileNavLink
+                to="/contact"
+                label="Contact"
                 closeMenu={() => setMobileMenuOpen(false)}
               />
 
