@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { uploadProfileImage } from "../controllers/uploadController.js";
+import { uploadProfileImage, uploadJobImage } from "../controllers/uploadController.js";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -32,6 +32,22 @@ router.post(
     });
   },
   uploadProfileImage
+);
+
+// POST /api/upload/job-image
+router.post(
+  "/job-image",
+  (req, res, next) => {
+    upload.single("image")(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ message: `Upload error: ${err.message}` });
+      } else if (err) {
+        return res.status(400).json({ message: err.message });
+      }
+      next();
+    });
+  },
+  uploadJobImage
 );
 
 export default router;

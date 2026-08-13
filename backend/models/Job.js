@@ -31,6 +31,10 @@ const Job = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    image: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     category: {
       type: DataTypes.STRING,
       allowNull: false,

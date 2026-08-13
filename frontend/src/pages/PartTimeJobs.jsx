@@ -1233,8 +1233,16 @@ const JobCard = ({
 
                     <div className="flex min-w-0 items-center gap-3">
 
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                            <BriefcaseBusiness size={23} />
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-indigo-50 text-indigo-600 border border-slate-100">
+                            {job.image || job.companyLogo ? (
+                                <img
+                                    src={job.image || job.companyLogo}
+                                    alt={job.title || "Job Image"}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <BriefcaseBusiness size={23} />
+                            )}
                         </div>
 
                         <div className="min-w-0">

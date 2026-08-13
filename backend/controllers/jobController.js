@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import { Job, JobApplication, JobBookmark, User } from "../models/index.js";
+import { uploadBase64ToSupabase } from "../services/uploadService.js";
 
 // @desc    Get all part-time jobs with search, filters, pagination, and sorting
 // @route   GET /api/jobs
@@ -137,6 +138,7 @@ export const createJob = async (req, res) => {
       title,
       companyName,
       companyLogo,
+      image,
       category,
       location,
       jobType,
@@ -156,11 +158,21 @@ export const createJob = async (req, res) => {
       return res.status(400).json({ message: "Please fill in all required job fields." });
     }
 
+    let imageUrl = image || companyLogo || null;
+    if (imageUrl && imageUrl.startsWith("data:image/")) {
+      try {
+        imageUrl = await uploadBase64ToSupabase(imageUrl, "job-post");
+      } catch (err) {
+        console.error("Failed to upload base64 image to job-post bucket:", err);
+      }
+    }
+
     const newJob = await Job.create({
       jobPosterId: req.user ? req.user.id : null,
       title,
       companyName,
-      companyLogo: companyLogo || null,
+      companyLogo: imageUrl || companyLogo || null,
+      image: imageUrl || null,
       category,
       location,
       jobType: jobType || "Part-Time",
