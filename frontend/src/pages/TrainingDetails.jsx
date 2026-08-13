@@ -97,6 +97,34 @@ function TrainingDetails() {
         userRole === "EMPLOYER" ||
         userRole === "CLIENT";
 
+    const isTrainingProvider = userRole === "TRAINING_PROVIDER";
+    const isOwner = isTrainingProvider && program && (program.providerId === currentUser?.id);
+
+    const handleDeleteProgram = async () => {
+        if (!window.confirm("Are you sure you want to delete this training program?")) return;
+        try {
+            const response = await fetch(`${API_URL}/api/training-programs/${id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.ok) {
+                navigate("/training-provider/dashboard");
+            } else {
+                const data = await response.json().catch(() => ({}));
+                alert(data.message || "Failed to delete training program.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error deleting training program.");
+        }
+    };
+
+    const handleEditProgram = () => {
+        navigate("/training-provider/dashboard", { state: { editProgramId: id } });
+    };
+
     useEffect(() => {
         fetchTrainingProgram();
     }, [id]);
@@ -450,6 +478,8 @@ function TrainingDetails() {
                             isLoggedIn={isLoggedIn}
                             isStudent={isStudent}
                             isJobPoster={isJobPoster}
+                            isTrainingProvider={isTrainingProvider}
+                            isOwner={isOwner}
                             enrolling={enrolling}
                             enrollmentSuccess={enrollmentSuccess}
                             enrollmentError={enrollmentError}
@@ -464,6 +494,8 @@ function TrainingDetails() {
                                     },
                                 })
                             }
+                            onEdit={handleEditProgram}
+                            onDelete={handleDeleteProgram}
                         />
 
                     </div>
@@ -701,19 +733,23 @@ function TrainingDetails() {
                         {/* Requirements */}
 
                         <ContentSection
-                            icon={<CheckCircle2 size={20} />}
+                            icon={<ShieldCheck size={20} />}
                             title="Requirements"
                         >
                             <ul className="space-y-3">
 
                                 {(program.requirements || []).map(
-                                    (requirement, index) => (
+                                    (req, index) => (
                                         <li
                                             key={index}
-                                            className="flex gap-3 text-sm leading-6 text-slate-600"
+                                            className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm leading-6 text-slate-700"
                                         >
-                                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-purple-500" />
-                                            {requirement}
+                                            <CheckCircle2
+                                                size={18}
+                                                className="mt-0.5 shrink-0 text-purple-600"
+                                            />
+
+                                            <span>{req}</span>
                                         </li>
                                     )
                                 )}
@@ -875,6 +911,8 @@ function TrainingDetails() {
                         isLoggedIn={isLoggedIn}
                         isStudent={isStudent}
                         isJobPoster={isJobPoster}
+                        isTrainingProvider={isTrainingProvider}
+                        isOwner={isOwner}
                         enrolling={enrolling}
                         enrollmentSuccess={enrollmentSuccess}
                         onEnroll={handleEnrollment}
@@ -888,6 +926,8 @@ function TrainingDetails() {
                                 },
                             })
                         }
+                        onEdit={handleEditProgram}
+                        onDelete={handleDeleteProgram}
                     />
 
                 </div>
@@ -936,12 +976,16 @@ function EnrollmentCard({
     isLoggedIn,
     isStudent,
     isJobPoster,
+    isTrainingProvider,
+    isOwner,
     enrolling,
     enrollmentSuccess,
     enrollmentError,
     onEnroll,
     onContinue,
     onLogin,
+    onEdit,
+    onDelete,
 }) {
     return (
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl">
@@ -1064,11 +1108,15 @@ function EnrollmentCard({
                             isLoggedIn={isLoggedIn}
                             isStudent={isStudent}
                             isJobPoster={isJobPoster}
+                            isTrainingProvider={isTrainingProvider}
+                            isOwner={isOwner}
                             enrolling={enrolling}
                             enrollmentSuccess={enrollmentSuccess}
                             onEnroll={onEnroll}
                             onContinue={onContinue}
                             onLogin={onLogin}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
                         />
 
                     </div>
@@ -1103,12 +1151,62 @@ function EnrollmentButton({
     isLoggedIn,
     isStudent,
     isJobPoster,
+    isTrainingProvider,
+    isOwner,
     enrolling,
     enrollmentSuccess,
     onEnroll,
     onContinue,
     onLogin,
+    onEdit,
+    onDelete,
 }) {
+    /*
+     * Owner Training Provider (Edit / Delete)
+     */
+    if (isTrainingProvider && isOwner) {
+        return (
+            <div className="space-y-3">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center">
+                    <p className="text-xs font-bold text-emerald-800">
+                        ✓ Your Posted Program
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                        onClick={onEdit}
+                        className="flex h-11 items-center justify-center gap-2 rounded-xl bg-purple-600 text-sm font-bold text-white shadow-md hover:bg-purple-700 transition"
+                    >
+                        Edit Program
+                    </button>
+                    <button
+                        onClick={onDelete}
+                        className="flex h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-600 hover:bg-red-100 transition"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    /*
+     * Non-owner Training Provider
+     */
+    if (isTrainingProvider) {
+        return (
+            <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-center">
+                <p className="text-sm font-bold text-purple-900">
+                    Training Provider View
+                </p>
+                <p className="mt-1 text-xs leading-5 text-purple-700">
+                    You can view course details & structure. Student enrollment only.
+                </p>
+            </div>
+        );
+    }
+
     /*
      * Already enrolled
      */

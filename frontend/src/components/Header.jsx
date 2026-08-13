@@ -75,7 +75,7 @@ const Header = () => {
             Home
           </Link>
 
-          {user?.role !== "client" && user?.role !== "job_poster" && (
+          {user?.role !== "client" && user?.role !== "job_poster" && user?.role !== "training_provider" && (
             <Link
               to="/part-time-jobs"
               className={`text-sm font-medium transition ${
@@ -88,16 +88,18 @@ const Header = () => {
             </Link>
           )}
 
-          <Link
-            to="/freelancing"
-            className={`text-sm font-medium transition ${
-              isActive("/freelancing") || isActive("/freelance")
-                ? "text-blue-600 font-bold"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            Freelancing
-          </Link>
+          {user?.role !== "training_provider" && (
+            <Link
+              to="/freelancing"
+              className={`text-sm font-medium transition ${
+                isActive("/freelancing") || isActive("/freelance")
+                  ? "text-blue-600 font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Freelancing
+            </Link>
+          )}
 
           {user?.role !== "client" && user?.role !== "job_poster" && (
             <Link
@@ -207,7 +209,7 @@ const Header = () => {
               Home
             </Link>
 
-            {user?.role !== "client" && user?.role !== "job_poster" && (
+            {user?.role !== "client" && user?.role !== "job_poster" && user?.role !== "training_provider" && (
               <Link
                 to="/part-time-jobs"
                 onClick={() => setMobileMenuOpen(false)}
@@ -217,13 +219,15 @@ const Header = () => {
               </Link>
             )}
 
-            <Link
-              to="/freelancing"
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Freelancing
-            </Link>
+            {user?.role !== "training_provider" && (
+              <Link
+                to="/freelancing"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Freelancing
+              </Link>
+            )}
 
             {user?.role !== "client" && user?.role !== "job_poster" && (
               <Link

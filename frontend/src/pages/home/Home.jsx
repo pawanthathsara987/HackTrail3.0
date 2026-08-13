@@ -65,6 +65,7 @@ const Home = () => {
   const getDashboardPath = (role) => {
     if (role === "job_poster") return "/job-poster/dashboard";
     if (role === "client") return "/client/dashboard";
+    if (role === "training_provider") return "/training-provider/dashboard";
     return "/student/dashboard";
   };
 
@@ -102,18 +103,24 @@ const Home = () => {
           {/* Desktop Navigation */}
           <nav className="hidden items-center gap-7 lg:flex">
             <NavLink to="/" label="Home" />
-            <NavLink
-              to="/part-time-jobs"
-              label="Part-Time Jobs"
-            />
-            <NavLink
-              to="/freelancing"
-              label="Freelancing"
-            />
-            <NavLink
-              to="/training"
-              label="Training Programs"
-            />
+            {user?.role !== "client" && user?.role !== "job_poster" && user?.role !== "training_provider" && (
+              <NavLink
+                to="/part-time-jobs"
+                label="Part-Time Jobs"
+              />
+            )}
+            {user?.role !== "training_provider" && (
+              <NavLink
+                to="/freelancing"
+                label="Freelancing"
+              />
+            )}
+            {user?.role !== "client" && user?.role !== "job_poster" && (
+              <NavLink
+                to="/training"
+                label="Training Programs"
+              />
+            )}
             <NavLink
               to="/how-it-works"
               label="How It Works"
@@ -187,23 +194,29 @@ const Home = () => {
                 closeMenu={() => setMobileMenuOpen(false)}
               />
 
-              <MobileNavLink
-                to="/part-time-jobs"
-                label="Part-Time Jobs"
-                closeMenu={() => setMobileMenuOpen(false)}
-              />
+              {user?.role !== "client" && user?.role !== "job_poster" && user?.role !== "training_provider" && (
+                <MobileNavLink
+                  to="/part-time-jobs"
+                  label="Part-Time Jobs"
+                  closeMenu={() => setMobileMenuOpen(false)}
+                />
+              )}
 
-              <MobileNavLink
-                to="/freelancing"
-                label="Freelancing"
-                closeMenu={() => setMobileMenuOpen(false)}
-              />
+              {user?.role !== "training_provider" && (
+                <MobileNavLink
+                  to="/freelancing"
+                  label="Freelancing"
+                  closeMenu={() => setMobileMenuOpen(false)}
+                />
+              )}
 
-              <MobileNavLink
-                to="/training"
-                label="Training Programs"
-                closeMenu={() => setMobileMenuOpen(false)}
-              />
+              {user?.role !== "client" && user?.role !== "job_poster" && (
+                <MobileNavLink
+                  to="/training"
+                  label="Training Programs"
+                  closeMenu={() => setMobileMenuOpen(false)}
+                />
+              )}
 
               <MobileNavLink
                 to="/how-it-works"
@@ -290,21 +303,51 @@ const Home = () => {
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  to="/part-time-jobs"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3.5 font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
-                >
-                  Find Opportunities
-                  <ArrowRight size={18} />
-                </Link>
+                {user?.role === "training_provider" ? (
+                  <>
+                    <Link
+                      to="/training-provider/dashboard"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3.5 font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
+                    >
+                      Post Training Program
+                      <ArrowRight size={18} />
+                    </Link>
 
-                <Link
-                  to="/training"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-                >
-                  Start Learning
-                  <BookOpen size={18} />
-                </Link>
+                    <Link
+                      to="/training"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                    >
+                      Explore Training Programs
+                      <BookOpen size={18} />
+                    </Link>
+                  </>
+                ) : user?.role === "client" || user?.role === "job_poster" ? (
+                  <Link
+                    to="/freelancing"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3.5 font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
+                  >
+                    Hire Student Freelancers
+                    <ArrowRight size={18} />
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/part-time-jobs"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3.5 font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
+                    >
+                      Find Opportunities
+                      <ArrowRight size={18} />
+                    </Link>
+
+                    <Link
+                      to="/training"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                    >
+                      Start Learning
+                      <BookOpen size={18} />
+                    </Link>
+                  </>
+                )}
               </div>
 
               {/* Hero Trust Points */}
@@ -403,32 +446,36 @@ const Home = () => {
               description="Whether you're looking to earn, work independently, or develop new skills, OpportunityX helps you take the next step."
             />
 
-            <div className="mt-14 grid gap-6 lg:grid-cols-3">
+            <div className={`mt-14 grid gap-6 ${user?.role === "client" || user?.role === "job_poster" || user?.role === "training_provider" ? "lg:grid-cols-1 max-w-xl mx-auto" : "lg:grid-cols-3"}`}>
+              {user?.role !== "client" && user?.role !== "job_poster" && user?.role !== "training_provider" && (
+                <OpportunityCard
+                  icon={BriefcaseBusiness}
+                  title="Part-Time Jobs"
+                  description="Find flexible part-time work that fits around your studies and helps you earn while gaining valuable experience."
+                  button="Find Part-Time Jobs"
+                  to="/part-time-jobs"
+                />
+              )}
 
-              <OpportunityCard
-                icon={BriefcaseBusiness}
-                title="Part-Time Jobs"
-                description="Find flexible part-time work that fits around your studies and helps you earn while gaining valuable experience."
-                button="Find Part-Time Jobs"
-                to="/part-time-jobs"
-              />
+              {user?.role !== "training_provider" && (
+                <OpportunityCard
+                  icon={Users}
+                  title="Student Freelancing"
+                  description="Hire skilled student freelancers, review gig proposals, connect with top talent, and get your projects delivered."
+                  button="Explore Freelancing"
+                  to="/freelancing"
+                />
+              )}
 
-              <OpportunityCard
-                icon={Users}
-                title="Freelancing"
-                description="Use your skills to work on freelance projects, connect with clients, build your portfolio, and earn from your expertise."
-                button="Explore Freelancing"
-                to="/freelancing"
-              />
-
-              <OpportunityCard
-                icon={GraduationCap}
-                title="Training Programs"
-                description="Learn practical and in-demand skills through training programs designed to help you become ready for real opportunities."
-                button="Explore Training"
-                to="/training"
-              />
-
+              {user?.role !== "client" && user?.role !== "job_poster" && (
+                <OpportunityCard
+                  icon={GraduationCap}
+                  title="Training Programs"
+                  description="Learn practical and in-demand skills through training programs designed to help you become ready for real opportunities."
+                  button="Explore Training"
+                  to="/training"
+                />
+              )}
             </div>
           </div>
         </section>
@@ -510,13 +557,23 @@ const Home = () => {
                 <Benefit text="Improve career opportunities" />
               </div>
 
-              <Link
-                to="/register"
-                className="mt-9 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-700"
-              >
-                Create Your Profile
-                <ArrowRight size={18} />
-              </Link>
+              {user ? (
+                <Link
+                  to={getDashboardPath(user.role)}
+                  className="mt-9 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-700 shadow-md"
+                >
+                  Go to My Dashboard
+                  <ArrowRight size={18} />
+                </Link>
+              ) : (
+                <Link
+                  to="/register"
+                  className="mt-9 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-700 shadow-md"
+                >
+                  Create Your Profile
+                  <ArrowRight size={18} />
+                </Link>
+              )}
             </div>
 
             {/* Visual */}
@@ -587,68 +644,70 @@ const Home = () => {
             TRAINING PREVIEW
         ====================================================== */}
 
-        <section className="bg-slate-50 px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
-          <div className="mx-auto max-w-7xl">
+        {user?.role !== "client" && user?.role !== "job_poster" && (
+          <section className="bg-slate-50 px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
+            <div className="mx-auto max-w-7xl">
 
-            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-              <div>
-                <span className="text-sm font-bold uppercase tracking-wider text-blue-600">
-                  Learn & grow
-                </span>
+              <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+                <div>
+                  <span className="text-sm font-bold uppercase tracking-wider text-blue-600">
+                    Learn & grow
+                  </span>
 
-                <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                  Build Skills. Unlock Opportunities.
-                </h2>
+                  <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                    Build Skills. Unlock Opportunities.
+                  </h2>
 
-                <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-500">
-                  Explore practical training programs designed
-                  to help you develop useful skills and become
-                  ready for real opportunities.
-                </p>
+                  <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-500">
+                    Explore practical training programs designed
+                    to help you develop useful skills and become
+                    ready for real opportunities.
+                  </p>
+                </div>
+
+                <Link
+                  to="/training"
+                  className="inline-flex shrink-0 items-center gap-2 font-semibold text-blue-600 hover:text-blue-700"
+                >
+                  View Training Programs
+                  <ArrowRight size={18} />
+                </Link>
               </div>
 
-              <Link
-                to="/training"
-                className="inline-flex shrink-0 items-center gap-2 font-semibold text-blue-600 hover:text-blue-700"
-              >
-                View Training Programs
-                <ArrowRight size={18} />
-              </Link>
+              <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                <TrainingCategory
+                  icon={Code2}
+                  title="Web Development"
+                />
+
+                <TrainingCategory
+                  icon={Palette}
+                  title="Graphic Design"
+                />
+
+                <TrainingCategory
+                  icon={Megaphone}
+                  title="Digital Marketing"
+                />
+
+                <TrainingCategory
+                  icon={Database}
+                  title="Data & AI"
+                />
+
+                <TrainingCategory
+                  icon={MessageCircle}
+                  title="Communication"
+                />
+
+                <TrainingCategory
+                  icon={BarChart3}
+                  title="Business Skills"
+                />
+              </div>
             </div>
-
-            <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              <TrainingCategory
-                icon={Code2}
-                title="Web Development"
-              />
-
-              <TrainingCategory
-                icon={Palette}
-                title="Graphic Design"
-              />
-
-              <TrainingCategory
-                icon={Megaphone}
-                title="Digital Marketing"
-              />
-
-              <TrainingCategory
-                icon={Database}
-                title="Data & AI"
-              />
-
-              <TrainingCategory
-                icon={MessageCircle}
-                title="Communication"
-              />
-
-              <TrainingCategory
-                icon={BarChart3}
-                title="Business Skills"
-              />
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* =====================================================
             IMPACT
@@ -660,33 +719,39 @@ const Home = () => {
             <SectionHeader
               eyebrow="Platform impact"
               title="Growing Together"
-              description="These are placeholder values and should be replaced with real statistics from the backend."
+              description="Empowering students and clients across Sri Lanka."
             />
 
-            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className={`mt-12 grid gap-5 ${user?.role === "client" || user?.role === "job_poster" || user?.role === "training_provider" ? "sm:grid-cols-2 lg:grid-cols-2 max-w-2xl mx-auto" : "sm:grid-cols-2 lg:grid-cols-4"}`}>
               <StatCard
                 icon={Users}
                 value="—"
                 label="Students Registered"
               />
 
-              <StatCard
-                icon={BriefcaseBusiness}
-                value="—"
-                label="Part-Time Jobs Posted"
-              />
+              {user?.role !== "client" && user?.role !== "job_poster" && user?.role !== "training_provider" && (
+                <StatCard
+                  icon={BriefcaseBusiness}
+                  value="—"
+                  label="Part-Time Jobs Posted"
+                />
+              )}
 
-              <StatCard
-                icon={Target}
-                value="—"
-                label="Freelance Projects"
-              />
+              {user?.role !== "training_provider" && (
+                <StatCard
+                  icon={Target}
+                  value="—"
+                  label="Freelance Projects"
+                />
+              )}
 
-              <StatCard
-                icon={GraduationCap}
-                value="—"
-                label="Training Programs"
-              />
+              {user?.role !== "client" && user?.role !== "job_poster" && (
+                <StatCard
+                  icon={GraduationCap}
+                  value="—"
+                  label="Training Programs"
+                />
+              )}
             </div>
           </div>
         </section>
@@ -708,35 +773,75 @@ const Home = () => {
               </h2>
 
               <p className="mt-5 text-lg leading-8 text-slate-400">
-                Whether you want to earn through part-time work,
-                build your career through freelancing, or learn
-                a new skill, your next opportunity starts here.
+                {user?.role === "training_provider"
+                  ? "Publish your courses, manage bootcamps, and upskill motivated students."
+                  : user?.role === "client" || user?.role === "job_poster"
+                  ? "Hire talented student freelancers, review gig proposals, and post work directly."
+                  : "Whether you want to earn through part-time work, build your career through freelancing, or learn a new skill, your next opportunity starts here."}
               </p>
 
               <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-                <Link
-                  to="/part-time-jobs"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 font-semibold text-slate-900 transition hover:bg-slate-100"
-                >
-                  Find a Part-Time Job
-                  <ArrowRight size={17} />
-                </Link>
+                {user?.role === "training_provider" ? (
+                  <>
+                    <Link
+                      to="/training-provider/dashboard"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-500"
+                    >
+                      Manage Training Programs
+                      <ArrowRight size={17} />
+                    </Link>
+                    <Link
+                      to="/training"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-6 py-3.5 font-semibold text-white transition hover:bg-white/10"
+                    >
+                      View Training Directory
+                      <ArrowRight size={17} />
+                    </Link>
+                  </>
+                ) : user?.role === "client" || user?.role === "job_poster" ? (
+                  <>
+                    <Link
+                      to="/freelancing"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-500"
+                    >
+                      Explore Student Freelancers
+                      <ArrowRight size={17} />
+                    </Link>
+                    <Link
+                      to={getDashboardPath(user.role)}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-6 py-3.5 font-semibold text-white transition hover:bg-white/10"
+                    >
+                      Go to Dashboard
+                      <ArrowRight size={17} />
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/part-time-jobs"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 font-semibold text-slate-900 transition hover:bg-slate-100"
+                    >
+                      Find a Part-Time Job
+                      <ArrowRight size={17} />
+                    </Link>
 
-                <Link
-                  to="/freelancing"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 font-semibold text-white transition hover:bg-blue-500"
-                >
-                  Explore Freelancing
-                  <ArrowRight size={17} />
-                </Link>
+                    <Link
+                      to="/freelancing"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 font-semibold text-white transition hover:bg-blue-500"
+                    >
+                      Explore Freelancing
+                      <ArrowRight size={17} />
+                    </Link>
 
-                <Link
-                  to="/training"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-5 py-3.5 font-semibold text-white transition hover:bg-white/10"
-                >
-                  Start Training
-                  <ArrowRight size={17} />
-                </Link>
+                    <Link
+                      to="/training"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-5 py-3.5 font-semibold text-white transition hover:bg-white/10"
+                    >
+                      Start Training
+                      <ArrowRight size={17} />
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -777,18 +882,24 @@ const Home = () => {
             {/* Platform */}
             <FooterColumn title="Platform">
               <FooterLink to="/" label="Home" />
-              <FooterLink
-                to="/part-time-jobs"
-                label="Part-Time Jobs"
-              />
-              <FooterLink
-                to="/freelancing"
-                label="Freelancing"
-              />
-              <FooterLink
-                to="/training"
-                label="Training Programs"
-              />
+              {user?.role !== "client" && user?.role !== "job_poster" && user?.role !== "training_provider" && (
+                <FooterLink
+                  to="/part-time-jobs"
+                  label="Part-Time Jobs"
+                />
+              )}
+              {user?.role !== "training_provider" && (
+                <FooterLink
+                  to="/freelancing"
+                  label="Freelancing"
+                />
+              )}
+              {user?.role !== "client" && user?.role !== "job_poster" && (
+                <FooterLink
+                  to="/training"
+                  label="Training Programs"
+                />
+              )}
               <FooterLink
                 to="/how-it-works"
                 label="How It Works"
@@ -798,8 +909,14 @@ const Home = () => {
 
             {/* Account */}
             <FooterColumn title="Account">
-              <FooterLink to="/login" label="Login" />
-              <FooterLink to="/register" label="Register" />
+              {user ? (
+                <FooterLink to={getDashboardPath(user.role)} label="My Dashboard" />
+              ) : (
+                <>
+                  <FooterLink to="/login" label="Login" />
+                  <FooterLink to="/register" label="Register" />
+                </>
+              )}
             </FooterColumn>
 
             {/* Support */}

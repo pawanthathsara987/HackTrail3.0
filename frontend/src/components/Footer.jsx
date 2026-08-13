@@ -5,13 +5,22 @@ import { Target, Heart } from "lucide-react";
 const Footer = () => {
   const location = useLocation();
   const currentYear = new Date().getFullYear();
+  const user = (() => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      return null;
+    }
+  })();
 
   // Hide global footer on Home page (which has its own footer) or dashboard views
   if (
     location.pathname === "/" ||
     location.pathname.startsWith("/student/dashboard") ||
     location.pathname.startsWith("/job-poster/dashboard") ||
-    location.pathname.startsWith("/client/dashboard")
+    location.pathname.startsWith("/client/dashboard") ||
+    location.pathname.startsWith("/training-provider/dashboard")
   ) {
     return null;
   }
@@ -47,21 +56,27 @@ const Footer = () => {
                   Home
                 </Link>
               </li>
-              <li>
-                <Link to="/part-time-jobs" className="text-slate-500 hover:text-slate-900 transition">
-                  Part-Time Jobs
-                </Link>
-              </li>
-              <li>
-                <Link to="/freelancing" className="text-slate-500 hover:text-slate-900 transition">
-                  Freelancing
-                </Link>
-              </li>
-              <li>
-                <Link to="/training" className="text-slate-500 hover:text-slate-900 transition">
-                  Training Programs
-                </Link>
-              </li>
+              {user?.role !== "client" && user?.role !== "job_poster" && user?.role !== "training_provider" && (
+                <li>
+                  <Link to="/part-time-jobs" className="text-slate-500 hover:text-slate-900 transition">
+                    Part-Time Jobs
+                  </Link>
+                </li>
+              )}
+              {user?.role !== "training_provider" && (
+                <li>
+                  <Link to="/freelancing" className="text-slate-500 hover:text-slate-900 transition">
+                    Freelancing
+                  </Link>
+                </li>
+              )}
+              {user?.role !== "client" && user?.role !== "job_poster" && (
+                <li>
+                  <Link to="/training" className="text-slate-500 hover:text-slate-900 transition">
+                    Training Programs
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 
