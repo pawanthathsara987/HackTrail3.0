@@ -239,26 +239,7 @@ const Register = () => {
         }
       }
 
-      if (formData.role === "client") {
-        if (!formData.servicesInterested.trim()) {
-          newErrors.servicesInterested =
-            "Please specify the services you are interested in.";
-        }
 
-        if (!formData.projectCategories.trim()) {
-          newErrors.projectCategories =
-            "Please specify your project categories.";
-        }
-
-        if (!formData.budgetRange) {
-          newErrors.budgetRange = "Please select a budget range.";
-        }
-
-        if (!formData.preferredSkills.trim()) {
-          newErrors.preferredSkills =
-            "Please specify your preferred freelancer skills.";
-        }
-      }
 
       if (formData.role === "training_provider") {
         if (!formData.organizationName.trim()) {
@@ -1044,91 +1025,7 @@ const RoleInformation = ({
           </FormSection>
         )}
 
-        {/* Client */}
-        {formData.role === "client" && (
-          <FormSection
-            title="Hiring Preferences"
-            description="Help us understand the freelancers and services you are looking for."
-          >
-            <div className="grid gap-5 md:grid-cols-2">
-              <InputField
-                label="Services you're interested in"
-                required
-                placeholder="e.g. Web development, design"
-                value={formData.servicesInterested}
-                onChange={(e) =>
-                  updateField(
-                    "servicesInterested",
-                    e.target.value
-                  )
-                }
-                error={errors.servicesInterested}
-              />
 
-              <InputField
-                label="Project categories"
-                required
-                placeholder="e.g. Website, mobile app"
-                value={formData.projectCategories}
-                onChange={(e) =>
-                  updateField(
-                    "projectCategories",
-                    e.target.value
-                  )
-                }
-                error={errors.projectCategories}
-              />
-
-              <SelectField
-                label="Typical budget range"
-                required
-                value={formData.budgetRange}
-                onChange={(e) =>
-                  updateField(
-                    "budgetRange",
-                    e.target.value
-                  )
-                }
-                error={errors.budgetRange}
-                options={[
-                  ["under_25000", "Under LKR 25,000"],
-                  ["25k_50k", "LKR 25,000 - 50,000"],
-                  ["50k_100k", "LKR 50,000 - 100,000"],
-                  ["100k_250k", "LKR 100,000 - 250,000"],
-                  ["250k_plus", "LKR 250,000+"],
-                ]}
-              />
-
-              <InputField
-                label="Preferred freelancer skills"
-                required
-                placeholder="e.g. React, Photoshop, SEO"
-                value={formData.preferredSkills}
-                onChange={(e) =>
-                  updateField(
-                    "preferredSkills",
-                    e.target.value
-                  )
-                }
-                error={errors.preferredSkills}
-              />
-
-              <div className="md:col-span-2">
-                <TextareaField
-                  label="What do you usually need?"
-                  placeholder="Briefly describe your typical projects or requirements..."
-                  value={formData.hiringDescription}
-                  onChange={(e) =>
-                    updateField(
-                      "hiringDescription",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </FormSection>
-        )}
 
         {/* Training Provider */}
         {formData.role === "training_provider" && (
@@ -1400,29 +1297,7 @@ const ReviewStep = ({ formData, selectedRole, setStep }) => {
           </ReviewCard>
         )}
 
-        {formData.role === "client" && (
-          <ReviewCard
-            title="Hiring preferences"
-            onEdit={() => setStep(2)}
-          >
-            <ReviewItem
-              label="Services"
-              value={formData.servicesInterested}
-            />
-            <ReviewItem
-              label="Categories"
-              value={formData.projectCategories}
-            />
-            <ReviewItem
-              label="Budget"
-              value={formData.budgetRange}
-            />
-            <ReviewItem
-              label="Preferred skills"
-              value={formData.preferredSkills}
-            />
-          </ReviewCard>
-        )}
+
 
         <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
           <CheckCircle2

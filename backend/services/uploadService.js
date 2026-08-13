@@ -19,7 +19,7 @@ export const uploadToSupabase = async (
 ) => {
   try {
     const ext = path.extname(originalName) || ".jpg";
-    const prefix = bucketName === "job-post" ? "job" : "profile";
+    const prefix = bucketName === "job-post" ? "job" : bucketName === "client-upload" ? "client_attachment" : "profile";
     const fileName = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}${ext}`;
 
     const { data, error } = await supabase.storage

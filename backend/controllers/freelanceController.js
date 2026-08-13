@@ -103,6 +103,7 @@ export const getProjectById = async (req, res) => {
         {
           model: User,
           as: "client",
+          required: false,
           attributes: ["id", "fullName", "email", "phone", "location", "profilePhoto", "role"],
         },
       ],
@@ -238,7 +239,8 @@ export const submitProposal = async (req, res) => {
         attachmentUrl = await uploadToSupabase(
           req.file.buffer,
           req.file.originalname,
-          req.file.mimetype
+          req.file.mimetype,
+          "client-upload"
         );
       } catch (uploadErr) {
         console.error("Proposal attachment upload failed:", uploadErr);

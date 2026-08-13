@@ -28,6 +28,12 @@ const FreelanceProjectDetails = ({ user }) => {
 
   const [showProposal, setShowProposal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showDirectBuyModal, setShowDirectBuyModal] = useState(false);
+  const [buyInstructions, setBuyInstructions] = useState("");
+  const [priceOption, setPriceOption] = useState("agree"); // "agree" | "custom"
+  const [customPrice, setCustomPrice] = useState("");
+  const [deliveryTimeOption, setDeliveryTimeOption] = useState("2 Days");
+  const [buyAttachment, setBuyAttachment] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
@@ -49,7 +55,10 @@ const FreelanceProjectDetails = ({ user }) => {
         setError("");
         setNotFound(false);
 
-        const response = await fetch(`/api/freelance-projects/${id}`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`/api/freelance-projects/${id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
 
         if (response.status === 404) {
           setNotFound(true);
@@ -61,8 +70,15 @@ const FreelanceProjectDetails = ({ user }) => {
         }
 
         const data = await response.json();
+        const projData = data.project || data.data || data;
+        setProject(projData);
 
-        setProject(data.project || data.data || data);
+        const defaultDeadline = projData.deadline || projData.expectedDeliveryTime || "2 Days";
+        setForm((prev) => ({
+          ...prev,
+          deliveryTime: prev.deliveryTime || defaultDeadline,
+        }));
+        setDeliveryTimeOption(defaultDeadline);
 
         if (data.alreadySubmitted) {
           setAlreadySubmitted(true);
@@ -88,6 +104,18 @@ const FreelanceProjectDetails = ({ user }) => {
       return;
     }
 
+    const defaultDeadline = project?.deadline || project?.expectedDeliveryTime || "2 Days";
+
+    setForm((prev) => ({
+      ...prev,
+      deliveryTime: prev.deliveryTime || defaultDeadline,
+      proposedPrice:
+        prev.proposedPrice ||
+        (project?.budget
+          ? String(parseInt(project.budget.replace(/[^0-9]/g, ""), 10) || project.budget)
+          : ""),
+    }));
+
     setShowProposal(true);
   };
 
@@ -109,19 +137,15 @@ const FreelanceProjectDetails = ({ user }) => {
     const errors = {};
 
     if (!form.coverLetter.trim()) {
-      errors.coverLetter = "Cover letter is required.";
+      errors.coverLetter = "Proposal description / Cover letter is required.";
     }
 
-    if (!form.proposedPrice) {
+    if (priceOption === "custom" && !form.proposedPrice) {
       errors.proposedPrice = "Proposed price is required.";
     }
 
     if (!form.deliveryTime.trim()) {
-      errors.deliveryTime = "Delivery time is required.";
-    }
-
-    if (!form.relevantSkills.trim()) {
-      errors.relevantSkills = "Relevant skills are required.";
+      errors.deliveryTime = "Estimated delivery time is required.";
     }
 
     setFormErrors(errors);
@@ -145,12 +169,19 @@ const FreelanceProjectDetails = ({ user }) => {
       setSubmitting(true);
       setError("");
 
+      const finalPrice =
+        priceOption === "agree"
+          ? project?.budget || "Fixed Price Agreed"
+          : form.proposedPrice.trim().startsWith("$") || form.proposedPrice.trim().startsWith("Rs")
+          ? form.proposedPrice.trim()
+          : `$${form.proposedPrice.trim()}`;
+
       const formData = new FormData();
 
       formData.append("coverLetter", form.coverLetter);
-      formData.append("proposedPrice", form.proposedPrice);
-      formData.append("deliveryTime", form.deliveryTime);
-      formData.append("relevantSkills", form.relevantSkills);
+      formData.append("proposedPrice", finalPrice);
+      formData.append("deliveryTime", form.deliveryTime || "Standard Delivery");
+      formData.append("relevantSkills", project?.category || "Proposal");
 
       if (form.attachment) {
         formData.append("attachment", form.attachment);
@@ -196,6 +227,76 @@ const FreelanceProjectDetails = ({ user }) => {
       });
     } catch (err) {
       setError(err.message || "Failed to submit proposal.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDirectBuySubmit = async (e) => {
+    e.preventDefault();
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    if (!buyInstructions.trim()) {
+      setError("Please describe what you want the student freelancer to do.");
+      return;
+    }
+
+    if (priceOption === "custom" && !customPrice.trim()) {
+      setError("Please enter your proposed custom price.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError("");
+
+      const finalPrice =
+        priceOption === "agree"
+          ? project?.budget || "Fixed Price Agreed"
+          : customPrice.trim().startsWith("$") || customPrice.trim().startsWith("Rs")
+          ? customPrice.trim()
+          : `$${customPrice.trim()}`;
+
+      const formDataObj = new FormData();
+      formDataObj.append("coverLetter", buyInstructions.trim());
+      formDataObj.append("proposedPrice", finalPrice);
+      formDataObj.append("deliveryTime", deliveryTimeOption);
+      formDataObj.append("relevantSkills", project?.category || "Gig Order");
+
+      if (buyAttachment) {
+        formDataObj.append("attachment", buyAttachment);
+      }
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`/api/freelance-projects/${id}/proposals`, {
+        method: "POST",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formDataObj,
+      });
+
+      if (response.status === 409) {
+        setAlreadySubmitted(true);
+        setShowDirectBuyModal(false);
+        return;
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || "Failed to place order.");
+      }
+
+      setSuccess(true);
+      setShowDirectBuyModal(false);
+      setAlreadySubmitted(true);
+    } catch (err) {
+      setError(err.message || "Failed to place order.");
     } finally {
       setSubmitting(false);
     }
@@ -572,7 +673,7 @@ const FreelanceProjectDetails = ({ user }) => {
                       : "Students offer skills & gigs. Clients and customers can hire & pay."}
                   </p>
 
-                  {project.clientId === user?.id && (
+                  {user?.role === "student" && project.clientId === user?.id && (
                     <button
                       onClick={async () => {
                         if (window.confirm("Are you sure you want to delete this post?")) {
@@ -592,25 +693,26 @@ const FreelanceProjectDetails = ({ user }) => {
                 </div>
               ) : (
                 <div className="space-y-3">
+                  {/* Fiverr Style Option 1: Buy Gig Directly */}
                   <button
                     onClick={() => {
                       if (!user) {
                         navigate("/login");
-                        return;
+                      } else {
+                        setShowDirectBuyModal(true);
                       }
-                      setShowPaymentModal(true);
                     }}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 font-bold text-white transition hover:bg-emerald-700 shadow-md hover:shadow-lg"
+                    className="w-full rounded-2xl bg-amber-400 py-3.5 px-4 font-extrabold text-slate-950 shadow-md transition hover:bg-amber-300 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95"
                   >
-                    <CreditCard size={18} />
-                    <span>Hire Student & Pay Now ({project.budget})</span>
+                    ⚡ Buy / Order Gig ({project.budget || "Fixed Price"})
                   </button>
 
+                  {/* Option 2: Custom Proposal */}
                   <button
                     onClick={handleProposalClick}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+                    className="w-full rounded-2xl bg-slate-900 py-3 px-4 text-xs font-bold text-white transition hover:bg-emerald-600 shadow-sm flex items-center justify-center gap-2"
                   >
-                    Submit Proposal / Custom Offer
+                    Submit Custom Proposal / Quote
                   </button>
                 </div>
               )}
@@ -668,101 +770,104 @@ const FreelanceProjectDetails = ({ user }) => {
                   )}
                 </div>
 
-                {/* Proposed Price */}
+                {/* Pricing & Budget Agreement */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Proposed Price *
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-1.5">
+                    Pricing & Budget Agreement *
                   </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPriceOption("agree")}
+                      className={`rounded-2xl border p-3 text-left transition ${
+                        priceOption === "agree"
+                          ? "border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-200"
+                          : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                      }`}
+                    >
+                      <p className="text-xs font-bold text-gray-900">✓ Agree Listed Price</p>
+                      <p className="text-sm font-extrabold text-emerald-700 mt-0.5">
+                        {project?.budget || "Fixed Price"}
+                      </p>
+                    </button>
 
-                  <input
-                    type="number"
-                    name="proposedPrice"
-                    min="0"
-                    value={form.proposedPrice}
-                    onChange={handleChange}
-                    placeholder="Enter your proposed price"
-                    className={`w-full rounded-lg border px-4 py-3 outline-none focus:border-indigo-500 ${
-                      formErrors.proposedPrice
-                        ? "border-red-500"
-                        : "border-gray-200"
-                    }`}
-                  />
+                    <button
+                      type="button"
+                      onClick={() => setPriceOption("custom")}
+                      className={`rounded-2xl border p-3 text-left transition ${
+                        priceOption === "custom"
+                          ? "border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-200"
+                          : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                      }`}
+                    >
+                      <p className="text-xs font-bold text-gray-900">✏️ Set Custom Price</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Propose custom rate</p>
+                    </button>
+                  </div>
 
-                  {formErrors.proposedPrice && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {formErrors.proposedPrice}
-                    </p>
+                  {priceOption === "custom" && (
+                    <div className="mt-3">
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                        Enter Your Proposed Custom Price *
+                      </label>
+                      <input
+                        type="text"
+                        name="proposedPrice"
+                        value={form.proposedPrice}
+                        onChange={handleChange}
+                        placeholder="e.g. $45 or Rs. 15,000"
+                        className="w-full rounded-xl border border-gray-200 p-3 text-xs font-bold text-gray-900 outline-none focus:border-indigo-500"
+                      />
+                      {formErrors.proposedPrice && (
+                        <p className="mt-1 text-xs font-semibold text-red-500">
+                          {formErrors.proposedPrice}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                {/* Delivery */}
+                {/* Estimated Delivery Time */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Estimated Delivery Time *
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-1.5">
+                    Estimated Completion / Delivery Time *
                   </label>
-
-                  <input
-                    type="text"
+                  <select
                     name="deliveryTime"
                     value={form.deliveryTime}
                     onChange={handleChange}
-                    placeholder="Example: 7 days"
-                    className={`w-full rounded-lg border px-4 py-3 outline-none focus:border-indigo-500 ${
-                      formErrors.deliveryTime
-                        ? "border-red-500"
-                        : "border-gray-200"
-                    }`}
-                  />
-
+                    className="w-full rounded-xl border border-gray-200 p-3 text-xs font-bold text-gray-800 outline-none focus:border-indigo-500 bg-white"
+                  >
+                    {project?.deadline && (
+                      <option value={project.deadline}>
+                        {project.deadline}
+                      </option>
+                    )}
+                    <option value="1 Day Express">1 Day Express</option>
+                    <option value="2 Days">2 Days</option>
+                    <option value="3 Days">3 Days</option>
+                    <option value="5 Days">5 Days</option>
+                    <option value="1 Week">1 Week</option>
+                    <option value="2 Weeks">2 Weeks</option>
+                    <option value="Flexible">Flexible Timeline</option>
+                  </select>
                   {formErrors.deliveryTime && (
-                    <p className="mt-1 text-sm text-red-500">
+                    <p className="mt-1 text-xs font-semibold text-red-500">
                       {formErrors.deliveryTime}
-                    </p>
-                  )}
-                </div>
-
-                {/* Skills */}
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Relevant Skills *
-                  </label>
-
-                  <input
-                    type="text"
-                    name="relevantSkills"
-                    value={form.relevantSkills}
-                    onChange={handleChange}
-                    placeholder="Example: React, HTML, CSS, JavaScript"
-                    className={`w-full rounded-lg border px-4 py-3 outline-none focus:border-indigo-500 ${
-                      formErrors.relevantSkills
-                        ? "border-red-500"
-                        : "border-gray-200"
-                    }`}
-                  />
-
-                  {formErrors.relevantSkills && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {formErrors.relevantSkills}
                     </p>
                   )}
                 </div>
 
                 {/* Attachment */}
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    Attachment
-                    <span className="ml-1 font-normal text-gray-400">
-                      (Optional)
-                    </span>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-1.5">
+                    Attachment / Proposal Document (Optional)
                   </label>
 
-                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-5 text-sm text-gray-500 hover:border-indigo-400 hover:bg-indigo-50">
-                    <Upload size={20} />
-
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 p-4 text-xs font-semibold text-gray-600 hover:border-indigo-400 hover:bg-indigo-50/40 transition">
+                    <Upload size={18} className="text-indigo-600" />
                     <span>
-                      {form.attachment
-                        ? form.attachment.name
-                        : "Upload a file"}
+                      {form.attachment ? form.attachment.name : "Upload a file (brief, wireframes, CV)"}
                     </span>
 
                     <input
@@ -821,6 +926,169 @@ const FreelanceProjectDetails = ({ user }) => {
             }));
           }}
         />
+        {/* FIVERR DIRECT ORDER / BUY GIG MODAL */}
+        {showDirectBuyModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
+            <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl border border-gray-100 max-h-[92vh] overflow-y-auto my-6">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="rounded-2xl bg-amber-400 p-2.5 text-slate-950 font-bold text-lg">
+                    ⚡
+                  </span>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Order / Hire Student Freelancer
+                    </h2>
+                    <p className="text-xs text-gray-500">
+                      Confirm details with student seller: <strong className="text-emerald-700">{creator.name}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowDirectBuyModal(false)}
+                  className="rounded-xl p-2 text-gray-400 hover:bg-gray-100"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Order Form */}
+              <form onSubmit={handleDirectBuySubmit} className="mt-5 space-y-5">
+                {/* 1. What he wants to do */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-1.5">
+                    1. What do you want built or done? *
+                  </label>
+                  <textarea
+                    rows="3"
+                    required
+                    value={buyInstructions}
+                    onChange={(e) => setBuyInstructions(e.target.value)}
+                    placeholder="Describe your exact project requirements, features needed, or guidelines for the student..."
+                    className="w-full rounded-xl border border-gray-200 p-3.5 text-xs outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 font-medium"
+                  />
+                </div>
+
+                {/* 2. Price Agreement vs Custom Price */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-1.5">
+                    2. Pricing & Budget Agreement *
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPriceOption("agree")}
+                      className={`rounded-2xl border p-3 text-left transition ${
+                        priceOption === "agree"
+                          ? "border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-200"
+                          : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                      }`}
+                    >
+                      <p className="text-xs font-bold text-gray-900">✓ Agree Listed Price</p>
+                      <p className="text-sm font-extrabold text-emerald-700 mt-0.5">
+                        {project.budget || "Fixed Price"}
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPriceOption("custom")}
+                      className={`rounded-2xl border p-3 text-left transition ${
+                        priceOption === "custom"
+                          ? "border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-200"
+                          : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                      }`}
+                    >
+                      <p className="text-xs font-bold text-gray-900">✏️ Propose Custom Price</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Negotiate custom budget</p>
+                    </button>
+                  </div>
+
+                  {priceOption === "custom" && (
+                    <div className="mt-3">
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                        Enter Your Custom Proposed Price *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. $45 or Rs. 15,000"
+                        value={customPrice}
+                        onChange={(e) => setCustomPrice(e.target.value)}
+                        className="w-full rounded-xl border border-gray-200 p-3 text-xs font-bold text-gray-900 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Delivery Timeframe */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-1.5">
+                    3. How soon do you need the project completed? *
+                  </label>
+                  <select
+                    value={deliveryTimeOption}
+                    onChange={(e) => setDeliveryTimeOption(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 p-3 text-xs font-bold text-gray-800 outline-none focus:border-emerald-500 bg-white"
+                  >
+                    {project?.deadline && (
+                      <option value={project.deadline}>
+                        {project.deadline}
+                      </option>
+                    )}
+                    <option value="1 Day Express">1 Day Express Delivery</option>
+                    <option value="2 Days">2 Days Delivery</option>
+                    <option value="3 Days">3 Days Delivery</option>
+                    <option value="5 Days">5 Days Delivery</option>
+                    <option value="1 Week">1 Week Delivery</option>
+                    <option value="2 Weeks">2 Weeks Delivery</option>
+                    <option value="Flexible">Flexible Timeline</option>
+                  </select>
+                </div>
+
+                {/* 4. Attachment Upload */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-1.5">
+                    4. Attach Reference File / Project Brief (Optional)
+                  </label>
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 p-4 text-xs font-semibold text-gray-600 hover:border-emerald-400 hover:bg-emerald-50/40 transition">
+                    <Upload size={16} className="text-emerald-600" />
+                    <span>
+                      {buyAttachment ? buyAttachment.name : "Click to upload brief, wireframes, or reference PDF/image"}
+                    </span>
+                    <input
+                      type="file"
+                      onChange={(e) => setBuyAttachment(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Submit Buttons */}
+                <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowDirectBuyModal(false)}
+                    disabled={submitting}
+                    className="flex-1 rounded-xl border border-gray-200 py-3 text-xs font-bold text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 rounded-xl bg-amber-400 py-3 text-xs font-extrabold text-slate-950 hover:bg-amber-300 shadow-md transition disabled:opacity-60"
+                  >
+                    {submitting ? "Placing Order..." : "⚡ Confirm & Order Now"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

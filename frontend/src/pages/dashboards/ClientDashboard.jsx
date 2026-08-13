@@ -19,6 +19,9 @@ import {
   Clock,
   FileText,
   Paperclip,
+  Trash2,
+  Eye,
+  Clock,
 } from "lucide-react";
 import FreelancePaymentModal from "../../components/FreelancePaymentModal";
 
@@ -34,6 +37,7 @@ const ClientDashboard = () => {
   const [selectedProposalForPayment, setSelectedProposalForPayment] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+  const [myProjects, setMyProjects] = useState([]);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -104,11 +108,46 @@ const ClientDashboard = () => {
         preferredSkills: client.preferredSkills || "",
         hiringDescription: client.hiringDescription || "",
       });
+
+      fetchMyProjects(user.id);
     } catch (err) {
       console.error(err);
       setMessage({ type: "error", text: err.message });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMyProjects = async (userId) => {
+    try {
+      const response = await fetch(`/api/freelance-projects?clientId=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMyProjects(data.projects || data.data || []);
+      }
+    } catch (err) {
+      console.error("Error loading client projects:", err);
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    if (!window.confirm("Are you sure you want to delete this project posting?")) return;
+
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`/api/freelance-projects/${projectId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to delete project.");
+      }
+      setMessage({ type: "success", text: "Project deleted successfully." });
+      if (userData) fetchMyProjects(userData.id);
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: "error", text: err.message });
     }
   };
 
@@ -257,7 +296,7 @@ const ClientDashboard = () => {
                 </div>
 
                 <p className="mt-1 text-sm text-slate-300">
-                  {client.servicesInterested || "Freelance Hiring Client"}
+                  {userData?.email}
                 </p>
 
                 <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-400">
@@ -266,8 +305,8 @@ const ClientDashboard = () => {
                     {userData?.location || "Location not set"}
                   </span>
                   <span className="flex items-center gap-1 font-semibold text-emerald-300">
-                    <DollarSign size={14} />
-                    Budget: {client.budgetRange || "Flexible"}
+                    <BriefcaseBusiness size={14} />
+                    Posted Projects: {myProjects.length}
                   </span>
                 </div>
               </div>
@@ -326,69 +365,19 @@ const ClientDashboard = () => {
         {/* TAB 1: OVERVIEW */}
         {activeTab === "overview" && (
           <div className="mt-8 grid gap-8 lg:grid-cols-3">
-            {/* Left Column: Client Details */}
+            {/* Left Column: Hired Jobs & Freelance Projects */}
             <div className="space-y-6 lg:col-span-2">
-              {/* Project & Hiring Preferences */}
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">
-                  <BriefcaseBusiness className="text-emerald-600" size={20} />
-                  Hiring & Project Preferences
-                </h3>
-
-                <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Services Interested In
-                    </p>
-                    <p className="mt-1 font-semibold text-slate-800">
-                      {client.servicesInterested || "Not specified"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Project Categories
-                    </p>
-                    <p className="mt-1 font-semibold text-slate-800">
-                      {client.projectCategories || "Not specified"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Typical Budget Range
-                    </p>
-                    <p className="mt-1 font-semibold text-emerald-700">
-                      {client.budgetRange || "Not specified"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Preferred Freelancer Skills
-                    </p>
-                    <p className="mt-1 font-semibold text-slate-800">
-                      {client.preferredSkills || "Not specified"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-6 border-t border-slate-100 pt-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Hiring Description
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    {client.hiringDescription || "No hiring description provided yet."}
-                  </p>
-                </div>
-              </div>
-
-              {/* Freelance Opportunities Action Card */}
+              {/* My Posted / Hired Jobs Section */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-                    <Users className="text-emerald-600" size={20} />
-                    Hire Student Freelancers
+                    <BriefcaseBusiness className="text-emerald-600" size={20} />
+                    Hired Jobs & Posted Projects
+                    {myProjects.length > 0 && (
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                        {myProjects.length}
+                      </span>
+                    )}
                   </h3>
 
                   <Link
@@ -396,17 +385,83 @@ const ClientDashboard = () => {
                     className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition"
                   >
                     <PlusCircle size={15} />
-                    Find Freelancers
+                    Explore Student Gigs
                   </Link>
                 </div>
 
-                <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center border border-dashed border-slate-200">
-                  <Code2 size={36} className="mx-auto text-slate-400" />
-                  <h4 className="mt-3 font-bold text-slate-800">Post a Freelance Project</h4>
-                  <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-                    Connect with skilled students specializing in Web Development, Graphic Design, Content Writing, and more.
-                  </p>
-                </div>
+                {myProjects.length === 0 ? (
+                  <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center border border-dashed border-slate-200">
+                    <Code2 size={40} className="mx-auto text-emerald-400" />
+                    <h4 className="mt-3 font-bold text-slate-800">No Hired Jobs Yet</h4>
+                    <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                      Explore student freelancer gigs or hire talented students for your projects.
+                    </p>
+                    <Link
+                      to="/freelancing"
+                      className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition"
+                    >
+                      <Users size={14} />
+                      Find & Hire Student Freelancers
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-4">
+                    {myProjects.map((proj) => (
+                      <div
+                        key={proj.id || proj._id}
+                        className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-white hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-slate-900">{proj.title}</h4>
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
+                                proj.status === "hired" || proj.status === "completed"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
+                              {proj.status || "Active"}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <BriefcaseBusiness size={12} />
+                              {proj.category}
+                            </span>
+                            <span className="flex items-center gap-1 text-emerald-700 font-semibold">
+                              <DollarSign size={12} />
+                              {proj.budget}
+                            </span>
+                            {proj.deadline && (
+                              <span className="flex items-center gap-1">
+                                <Clock size={12} />
+                                {proj.deadline}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/freelancing/${proj.id || proj._id}`}
+                            className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                          >
+                            <Eye size={14} />
+                            View
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteProject(proj.id || proj._id)}
+                            className="flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -414,14 +469,14 @@ const ClientDashboard = () => {
             <div className="space-y-6">
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">
-                  Account Contact Info
+                  Account Details
                 </h3>
 
                 <div className="mt-5 space-y-4 text-sm">
                   <div className="flex items-center gap-3">
                     <Users size={18} className="text-slate-400" />
                     <div>
-                      <p className="text-xs text-slate-400">Name</p>
+                      <p className="text-xs text-slate-400">Client Name</p>
                       <p className="font-semibold text-slate-800">{userData?.fullName}</p>
                     </div>
                   </div>
@@ -611,7 +666,6 @@ const ClientDashboard = () => {
         {/* TAB 3: EDIT PROFILE */}
         {activeTab === "edit" && (
           <form onSubmit={handleSaveProfile} className="mt-8 max-w-4xl space-y-8">
-            {/* Base Contact Info */}
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">
                 Personal & Contact Info
@@ -696,98 +750,6 @@ const ClientDashboard = () => {
               </div>
             </div>
 
-            {/* Hiring Preferences */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">
-                Hiring Preferences
-              </h3>
-
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Services Interested In
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.servicesInterested}
-                    onChange={(e) =>
-                      setFormData({ ...formData, servicesInterested: e.target.value })
-                    }
-                    placeholder="e.g. Web Development, Logo Design"
-                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Project Categories
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.projectCategories}
-                    onChange={(e) =>
-                      setFormData({ ...formData, projectCategories: e.target.value })
-                    }
-                    placeholder="e.g. Mobile Apps, Marketing"
-                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Budget Range
-                  </label>
-                  <select
-                    value={formData.budgetRange}
-                    onChange={(e) =>
-                      setFormData({ ...formData, budgetRange: e.target.value })
-                    }
-                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
-                    required
-                  >
-                    <option value="">Select Budget Range</option>
-                    <option value="< $500">&lt; $500</option>
-                    <option value="$500 - $1000">$500 - $1000</option>
-                    <option value="$1000 - $5000">$1000 - $5000</option>
-                    <option value="$5000+">$5000+</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Preferred Freelancer Skills
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.preferredSkills}
-                    onChange={(e) =>
-                      setFormData({ ...formData, preferredSkills: e.target.value })
-                    }
-                    placeholder="e.g. React, Node.js, UI Design"
-                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Hiring Description
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={formData.hiringDescription}
-                    onChange={(e) =>
-                      setFormData({ ...formData, hiringDescription: e.target.value })
-                    }
-                    placeholder="Describe what kind of talent or projects you are looking to hire for..."
-                    className="mt-2 w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Action Buttons */}
             <div className="flex items-center gap-4">
               <button
@@ -796,7 +758,7 @@ const ClientDashboard = () => {
                 className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3.5 font-semibold text-white shadow-lg transition hover:bg-emerald-700 disabled:opacity-50"
               >
                 <Save size={18} />
-                {saving ? "Saving Changes..." : "Save Client Profile"}
+                {saving ? "Saving Changes..." : "Save Profile"}
               </button>
 
               <button
