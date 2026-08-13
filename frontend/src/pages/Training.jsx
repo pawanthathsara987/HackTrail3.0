@@ -427,22 +427,33 @@ function Training() {
                     <>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
 
-                            {programs.map((program) => (
-                                <TrainingCard
-                                    key={program.id}
-                                    program={program}
-                                    saved={saved.includes(program.id)}
-                                    onSave={() => toggleSaved(program.id)}
-                                    onView={() =>
-                                        navigate(`/training/${program.id}`)
+                            {programs.map((program) => {
+                                const currentUser = (() => {
+                                    try {
+                                        const u = localStorage.getItem("user");
+                                        return u ? JSON.parse(u) : null;
+                                    } catch {
+                                        return null;
                                     }
-                                    onEnroll={() =>
-                                        navigate(`/training/${program.id}`, {
-                                            state: { autoEnroll: true },
-                                        })
-                                    }
-                                />
-                            ))}
+                                })();
+                                return (
+                                    <TrainingCard
+                                        key={program.id}
+                                        program={program}
+                                        saved={saved.includes(program.id)}
+                                        currentUser={currentUser}
+                                        onSave={() => toggleSaved(program.id)}
+                                        onView={() =>
+                                            navigate(`/training/${program.id}`)
+                                        }
+                                        onEnroll={() =>
+                                            navigate(`/training/${program.id}`, {
+                                                state: { autoEnroll: true },
+                                            })
+                                        }
+                                    />
+                                );
+                            })}
 
                         </div>
 
@@ -528,6 +539,7 @@ function TrainingCard({
     onSave,
     onView,
     onEnroll,
+    currentUser,
 }) {
     const providerObj = parseProvider(program.provider);
     const providerName = providerObj.name || "Training Provider";
@@ -537,6 +549,9 @@ function TrainingCard({
     const reviewsNum = Number(program.reviewsCount || program.reviews || 0);
     const priceNum = Number(program.price || 0);
     const ratingVal = program.rating ? Number(program.rating).toFixed(1) : "N/A";
+
+    const isTrainingProvider = currentUser?.role === "training_provider";
+    const isOwner = isTrainingProvider && (program.providerId === currentUser?.id);
 
     return (
         <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl">
@@ -552,11 +567,17 @@ function TrainingCard({
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
 
-                {/* Category */}
-                <div className="absolute left-4 top-4">
+                {/* Category & Owner Tag */}
+                <div className="absolute left-4 top-4 flex items-center gap-2">
                     <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-purple-700 shadow-sm backdrop-blur">
                         {program.category}
                     </span>
+
+                    {isOwner && (
+                        <span className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                            Your Program
+                        </span>
+                    )}
                 </div>
 
                 {/* Save */}
@@ -666,22 +687,31 @@ function TrainingCard({
                 </div>
 
                 {/* Buttons */}
-                <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="mt-5">
+                    {isTrainingProvider ? (
+                        <button
+                            onClick={onView}
+                            className="h-11 w-full rounded-xl border border-purple-200 bg-purple-50 text-sm font-bold text-purple-700 transition hover:bg-purple-100"
+                        >
+                            View Program Details
+                        </button>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={onView}
+                                className="h-11 rounded-xl border border-purple-200 bg-white text-sm font-semibold text-purple-700 transition hover:bg-purple-50"
+                            >
+                                View Program
+                            </button>
 
-                    <button
-                        onClick={onView}
-                        className="h-11 rounded-xl border border-purple-200 bg-white text-sm font-semibold text-purple-700 transition hover:bg-purple-50"
-                    >
-                        View Program
-                    </button>
-
-                    <button
-                        onClick={onEnroll}
-                        className="h-11 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-sm font-semibold text-white shadow-md shadow-purple-200 transition hover:-translate-y-0.5 hover:shadow-lg"
-                    >
-                        Enroll
-                    </button>
-
+                            <button
+                                onClick={onEnroll}
+                                className="h-11 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-sm font-semibold text-white shadow-md shadow-purple-200 transition hover:-translate-y-0.5 hover:shadow-lg"
+                            >
+                                Enroll
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </article>

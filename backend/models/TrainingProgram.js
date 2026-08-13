@@ -62,7 +62,7 @@ const TrainingProgram = sequelize.define(
       defaultValue: [],
     },
     image: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     enrolledCount: {

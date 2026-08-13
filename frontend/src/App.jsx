@@ -45,6 +45,33 @@ const GuestRoute = ({ children }) => {
   return children;
 };
 
+// Route Guard preventing client / job_poster / training_provider from accessing part-time jobs
+const PartTimeJobRoute = ({ children }) => {
+  const user = getUser();
+  if (user && (user.role === "client" || user.role === "job_poster" || user.role === "training_provider")) {
+    return <Navigate to={getRoleDashboard(user.role)} replace />;
+  }
+  return children;
+};
+
+// Route Guard preventing training_provider from accessing freelancing routes
+const FreelancingRoute = ({ children }) => {
+  const user = getUser();
+  if (user && user.role === "training_provider") {
+    return <Navigate to={getRoleDashboard(user.role)} replace />;
+  }
+  return children;
+};
+
+// Route Guard preventing client / job_poster from accessing training pages
+const TrainingRoute = ({ children }) => {
+  const user = getUser();
+  if (user && (user.role === "client" || user.role === "job_poster")) {
+    return <Navigate to={getRoleDashboard(user.role)} replace />;
+  }
+  return children;
+};
+
 // Route Guard for Role Specific Dashboards
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const user = getUser();
@@ -91,17 +118,59 @@ function App() {
               }
             />
 
-            {/* Part-Time Job Routes */}
-            <Route path="/part-time-jobs" element={<PartTimeJobs />} />
-            <Route path="/part-time-jobs/:id" element={<PartTimeJobDetails />} />
+            {/* Part-Time Job Routes (Restricted for Clients, Job Posters & Training Providers) */}
+            <Route
+              path="/part-time-jobs"
+              element={
+                <PartTimeJobRoute>
+                  <PartTimeJobs />
+                </PartTimeJobRoute>
+              }
+            />
+            <Route
+              path="/part-time-jobs/:id"
+              element={
+                <PartTimeJobRoute>
+                  <PartTimeJobDetails />
+                </PartTimeJobRoute>
+              }
+            />
 
-            {/* Training Routes */}
-            <Route path="/training" element={<Training />} />
-            <Route path="/training/:id" element={<TrainingDetails />} />
+            {/* Training Routes (Restricted for Clients & Job Posters) */}
+            <Route
+              path="/training"
+              element={
+                <TrainingRoute>
+                  <Training />
+                </TrainingRoute>
+              }
+            />
+            <Route
+              path="/training/:id"
+              element={
+                <TrainingRoute>
+                  <TrainingDetails />
+                </TrainingRoute>
+              }
+            />
 
-            {/* Freelancing Routes */}
-            <Route path="/freelancing" element={<Freelancing user={getUser()} />} />
-            <Route path="/freelancing/:id" element={<FreelanceProjectDetails user={getUser()} />} />
+            {/* Freelancing Routes (Restricted for Training Providers) */}
+            <Route
+              path="/freelancing"
+              element={
+                <FreelancingRoute>
+                  <Freelancing user={getUser()} />
+                </FreelancingRoute>
+              }
+            />
+            <Route
+              path="/freelancing/:id"
+              element={
+                <FreelancingRoute>
+                  <FreelanceProjectDetails user={getUser()} />
+                </FreelancingRoute>
+              }
+            />
 
             {/* Role Profile & Dashboard Routes (Protected per role) */}
             <Route

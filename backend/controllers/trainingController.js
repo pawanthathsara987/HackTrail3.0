@@ -259,6 +259,10 @@ export const deleteProgram = async (req, res) => {
 // @access  Private (Student)
 export const enrollProgram = async (req, res) => {
   try {
+    if (req.user && req.user.role !== "student") {
+      return res.status(403).json({ message: "Only students can enroll in training programs." });
+    }
+
     const { id } = req.params;
     const studentId = req.user.id;
 
