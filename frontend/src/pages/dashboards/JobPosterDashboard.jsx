@@ -21,6 +21,11 @@ import {
   Clock,
   DollarSign,
   Calendar,
+  GraduationCap,
+  Award,
+  FileText,
+  ExternalLink,
+  CheckCircle2,
 } from "lucide-react";
 
 
@@ -33,6 +38,7 @@ const JobPosterDashboard = () => {
   const [selectedApplicantJobId, setSelectedApplicantJobId] = useState("all");
   const [selectedApplicantStatus, setSelectedApplicantStatus] = useState("all");
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const [viewCandidateModal, setViewCandidateModal] = useState(null);
 
   const [userData, setUserData] = useState(null);
   const [formData, setFormData] = useState({
@@ -881,6 +887,13 @@ const JobPosterDashboard = () => {
 
                           <div className="flex flex-wrap items-center gap-2">
                             <button
+                              onClick={() => setViewCandidateModal(app)}
+                              className="flex items-center gap-1 rounded-xl border border-indigo-200 bg-indigo-50 px-3.5 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition"
+                            >
+                              <Eye size={14} />
+                              View Full Profile / CV
+                            </button>
+                            <button
                               onClick={() => handleUpdateApplicantStatus(app.id, "accepted")}
                               disabled={updatingStatusId === app.id || app.status === "accepted"}
                               className="rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow hover:bg-emerald-700 disabled:opacity-40 transition"
@@ -1459,6 +1472,220 @@ const JobPosterDashboard = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+        {/* CANDIDATE FULL PROFILE MODAL */}
+        {viewCandidateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-4 backdrop-blur-sm">
+            <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8 space-y-6">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                    <Users size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Candidate Full Profile</h3>
+                    <p className="text-xs text-slate-500">
+                      Applied for: <span className="font-semibold text-slate-700">{viewCandidateModal.jobTitle}</span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewCandidateModal(null)}
+                  className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Profile Overview Card */}
+              {(() => {
+                const applicant = viewCandidateModal.applicant || {};
+                const profile = applicant.studentProfile || {};
+
+                return (
+                  <div className="space-y-6">
+                    {/* Top Card: Photo & Basic Details */}
+                    <div className="flex flex-col sm:flex-row items-center gap-5 rounded-2xl bg-indigo-50/60 p-5 border border-indigo-100">
+                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-indigo-600 border-2 border-white text-3xl font-bold text-white flex items-center justify-center shadow-md">
+                        {applicant.profilePhoto ? (
+                          <img
+                            src={applicant.profilePhoto}
+                            alt={applicant.fullName}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          applicant.fullName?.charAt(0) || "S"
+                        )}
+                      </div>
+
+                      <div className="text-center sm:text-left min-w-0 space-y-1">
+                        <h2 className="text-2xl font-bold text-slate-900">{applicant.fullName || "Student Applicant"}</h2>
+                        <p className="text-sm font-semibold text-indigo-600">
+                          {profile.fieldOfStudy ? `${profile.fieldOfStudy} Student` : profile.educationLevel || "Student"}
+                          {profile.institutionName ? ` at ${profile.institutionName}` : ""}
+                        </p>
+
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-1 text-xs text-slate-600">
+                          <span className="flex items-center gap-1">
+                            <Mail size={14} className="text-indigo-500" />
+                            {applicant.email}
+                          </span>
+                          {applicant.phone && (
+                            <span className="flex items-center gap-1">
+                              <Phone size={14} className="text-indigo-500" />
+                              {applicant.phone}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <MapPin size={14} className="text-indigo-500" />
+                            {applicant.location || "Location not set"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Academic & Professional Info */}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <GraduationCap size={16} className="text-indigo-600" />
+                          Academic Information
+                        </h4>
+                        <div className="text-xs space-y-1 text-slate-700">
+                          <p><strong className="text-slate-900">Institution:</strong> {profile.institutionName || "Not specified"}</p>
+                          <p><strong className="text-slate-900">Degree / Field:</strong> {profile.fieldOfStudy || "Not specified"}</p>
+                          <p><strong className="text-slate-900">Education Level:</strong> {profile.educationLevel || "Student"}</p>
+                          {profile.graduationYear && <p><strong className="text-slate-900">Graduation Year:</strong> {profile.graduationYear}</p>}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <Award size={16} className="text-emerald-600" />
+                          Skill & Experience Level
+                        </h4>
+                        <div className="text-xs space-y-1 text-slate-700">
+                          <p><strong className="text-slate-900">Experience Level:</strong> {profile.experienceLevel ? `${profile.experienceLevel} Level` : "Student / Entry"}</p>
+                          <div>
+                            <strong className="text-slate-900 block mb-1">Skills & Tools:</strong>
+                            {Array.isArray(profile.skills) && profile.skills.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {profile.skills.map((sk, idx) => (
+                                  <span key={idx} className="rounded-md bg-white border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                                    {sk}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-slate-400">No skills listed</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Career Goals & Interests */}
+                    {(profile.careerGoals || profile.interests) && (
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs space-y-3">
+                        {profile.careerGoals && (
+                          <div>
+                            <h5 className="font-bold text-slate-800">Career Goals:</h5>
+                            <p className="text-slate-600 mt-1 leading-relaxed">{profile.careerGoals}</p>
+                          </div>
+                        )}
+                        {profile.interests && (
+                          <div>
+                            <h5 className="font-bold text-slate-800">Interests:</h5>
+                            <p className="text-slate-600 mt-1 leading-relaxed">{profile.interests}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Application Submission Details */}
+                    <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 text-xs space-y-3">
+                      <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
+                        <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                          <FileText size={15} className="text-indigo-600" />
+                          Application Details & Submission
+                        </span>
+                        <span className="text-slate-500">
+                          Applied: {new Date(viewCandidateModal.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      {viewCandidateModal.coverLetter ? (
+                        <div>
+                          <span className="font-semibold text-slate-800 block mb-1">Cover Letter / Statement:</span>
+                          <p className="bg-white p-3 rounded-xl border border-indigo-100 italic text-slate-700 leading-relaxed whitespace-pre-line">
+                            "{viewCandidateModal.coverLetter}"
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-slate-400 italic">No cover letter submitted with this application.</p>
+                      )}
+
+                      {viewCandidateModal.resumeUrl && (
+                        <div className="flex items-center justify-between pt-2 border-t border-indigo-100">
+                          <span className="font-semibold text-slate-800">Resume / Portfolio File:</span>
+                          <a
+                            href={viewCandidateModal.resumeUrl.startsWith("http") ? viewCandidateModal.resumeUrl : `https://${viewCandidateModal.resumeUrl}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-3.5 py-1.5 font-bold text-white shadow hover:bg-indigo-700 transition"
+                          >
+                            <ExternalLink size={14} />
+                            Open Resume / Portfolio
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Bar inside Modal */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                      <span className="text-xs text-slate-500 font-medium">
+                        Current Status: <span className="font-bold uppercase text-slate-800">{viewCandidateModal.status || "Pending"}</span>
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            handleUpdateApplicantStatus(viewCandidateModal.id, "accepted");
+                            setViewCandidateModal(prev => ({ ...prev, status: "accepted" }));
+                          }}
+                          disabled={viewCandidateModal.status === "accepted"}
+                          className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-emerald-700 disabled:opacity-40 transition"
+                        >
+                          Accept Candidate
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleUpdateApplicantStatus(viewCandidateModal.id, "reviewed");
+                            setViewCandidateModal(prev => ({ ...prev, status: "reviewed" }));
+                          }}
+                          disabled={viewCandidateModal.status === "reviewed"}
+                          className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-blue-700 disabled:opacity-40 transition"
+                        >
+                          Mark Reviewed
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleUpdateApplicantStatus(viewCandidateModal.id, "rejected");
+                            setViewCandidateModal(prev => ({ ...prev, status: "rejected" }));
+                          }}
+                          disabled={viewCandidateModal.status === "rejected"}
+                          className="rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-red-700 disabled:opacity-40 transition"
+                        >
+                          Reject Candidate
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
