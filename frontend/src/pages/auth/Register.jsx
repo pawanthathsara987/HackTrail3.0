@@ -17,6 +17,7 @@ import {
   Search,
   X,
   ShieldCheck,
+  BookOpen,
 } from "lucide-react";
 
 const roles = [
@@ -40,6 +41,13 @@ const roles = [
     description:
       "Find skilled freelancers and hire people for your projects and services.",
     icon: BriefcaseBusiness,
+  },
+  {
+    id: "training_provider",
+    title: "Training Provider",
+    description:
+      "Publish training programs, teach skills, and empower students with practical knowledge.",
+    icon: BookOpen,
   },
 ];
 
@@ -249,6 +257,15 @@ const Register = () => {
         if (!formData.preferredSkills.trim()) {
           newErrors.preferredSkills =
             "Please specify your preferred freelancer skills.";
+        }
+      }
+
+      if (formData.role === "training_provider") {
+        if (!formData.organizationName.trim()) {
+          newErrors.organizationName = "Training Institute / Organization name is required.";
+        }
+        if (!formData.organizationType) {
+          newErrors.organizationType = "Please select provider type.";
         }
       }
     }
@@ -1104,6 +1121,70 @@ const RoleInformation = ({
                   onChange={(e) =>
                     updateField(
                       "hiringDescription",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+            </div>
+          </FormSection>
+        )}
+
+        {/* Training Provider */}
+        {formData.role === "training_provider" && (
+          <FormSection
+            title="Training Provider Details"
+            subtitle="Tell us about your organization or training academy"
+          >
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <InputField
+                label="Institute / Organization Name"
+                required
+                placeholder="e.g. SLIIT Skills Academy / Tech Institute"
+                value={formData.organizationName}
+                onChange={(e) =>
+                  updateField("organizationName", e.target.value)
+                }
+                error={errors.organizationName}
+              />
+
+              <SelectField
+                label="Provider Type"
+                required
+                value={formData.organizationType}
+                onChange={(e) =>
+                  updateField(
+                    "organizationType",
+                    e.target.value
+                  )
+                }
+                error={errors.organizationType}
+                options={[
+                  ["university", "University / College"],
+                  ["academy", "Online / Training Academy"],
+                  ["corporate", "Corporate Trainer"],
+                  ["independent", "Independent Instructor"],
+                ]}
+              />
+
+              <InputField
+                label="Website URL"
+                type="url"
+                placeholder="https://example.com"
+                value={formData.website}
+                onChange={(e) =>
+                  updateField("website", e.target.value)
+                }
+              />
+
+              <div className="md:col-span-2">
+                <TextareaField
+                  label="About Provider / Institute Description"
+                  placeholder="Describe your training academy, specialized topics, and experience..."
+                  value={formData.organizationDescription}
+                  onChange={(e) =>
+                    updateField(
+                      "organizationDescription",
                       e.target.value
                     )
                   }

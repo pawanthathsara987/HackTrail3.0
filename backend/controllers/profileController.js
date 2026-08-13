@@ -1,5 +1,4 @@
-import { sequelize } from "../config/database.js";
-import { User, Student, JobPoster, Client } from "../models/index.js";
+import { User, Student, JobPoster, Client, TrainingProvider } from "../models/index.js";
 import { uploadBase64ToSupabase } from "../services/uploadService.js";
 
 // @desc    Get logged in user profile with role-specific details
@@ -13,6 +12,7 @@ export const getProfile = async (req, res) => {
         { model: Student, as: "studentProfile" },
         { model: JobPoster, as: "jobPosterProfile" },
         { model: Client, as: "clientProfile" },
+        { model: TrainingProvider, as: "trainingProviderProfile" },
       ],
     });
 
@@ -171,6 +171,25 @@ export const updateProfile = async (req, res) => {
       } else {
         await Client.create({ userId, ...clientData }, { transaction });
       }
+    } else if (user.role === "training_provider") {
+      let provider = await TrainingProvider.findOne({ where: { userId }, transaction });
+      const providerData = {
+        organizationName,
+        organizationType,
+        websiteUrl: website,
+        bio: organizationDescription,
+        specializations: Array.isArray(skills) ? skills : undefined,
+      };
+
+      Object.keys(providerData).forEach(
+        (key) => providerData[key] === undefined && delete providerData[key]
+      );
+
+      if (provider) {
+        await provider.update(providerData, { transaction });
+      } else {
+        await TrainingProvider.create({ userId, ...providerData }, { transaction });
+      }
     }
 
     await transaction.commit();
@@ -182,6 +201,7 @@ export const updateProfile = async (req, res) => {
         { model: Student, as: "studentProfile" },
         { model: JobPoster, as: "jobPosterProfile" },
         { model: Client, as: "clientProfile" },
+        { model: TrainingProvider, as: "trainingProviderProfile" },
       ],
     });
 

@@ -114,27 +114,12 @@ const Home = () => {
               to="/training"
               label="Training Programs"
             />
-            <button
-              type="button"
-              onClick={() => handleSectionClick("how-it-works")}
-              className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
-            >
-              How It Works
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSectionClick("about")}
-              className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
-            >
-              About
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSectionClick("contact")}
-              className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
-            >
-              Contact
-            </button>
+            <NavLink
+              to="/how-it-works"
+              label="How It Works"
+            />
+            <NavLink to="/about" label="About" />
+            <NavLink to="/contact" label="Contact" />
           </nav>
 
           {/* Desktop Actions */}

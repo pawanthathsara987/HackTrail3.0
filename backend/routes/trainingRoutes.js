@@ -3,6 +3,8 @@ import {
   getPrograms,
   getProgramById,
   createProgram,
+  updateProgram,
+  deleteProgram,
   enrollProgram,
 } from "../controllers/trainingController.js";
 import { protect } from "../middleware/authMiddleware.js";
@@ -22,6 +24,8 @@ const optionalAuth = (req, res, next) => {
 router.get("/", getPrograms);
 router.get("/:id", optionalAuth, getProgramById);
 router.post("/", protect, createProgram);
+router.put("/:id", protect, updateProgram);
+router.delete("/:id", protect, deleteProgram);
 router.post("/:id/enroll", protect, enrollProgram);
 
 export default router;

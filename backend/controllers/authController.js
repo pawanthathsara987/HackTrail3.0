@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { sequelize } from "../config/database.js";
-import { User, Student, JobPoster, Client } from "../models/index.js";
+import { User, Student, JobPoster, Client, TrainingProvider } from "../models/index.js";
 import { uploadBase64ToSupabase } from "../services/uploadService.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "opportunityx_secret_key";
@@ -54,7 +54,7 @@ export const register = async (req, res) => {
     } = req.body;
 
     // 1. Validation
-    if (!role || !["student", "job_poster", "client"].includes(role)) {
+    if (!role || !["student", "job_poster", "client", "training_provider"].includes(role)) {
       await transaction.rollback();
       return res.status(400).json({ message: "Invalid or missing role." });
     }
@@ -104,6 +104,13 @@ export const register = async (req, res) => {
         return res
           .status(400)
           .json({ message: "Please fill in all required client details." });
+      }
+    } else if (role === "training_provider") {
+      if (!organizationName) {
+        await transaction.rollback();
+        return res
+          .status(400)
+          .json({ message: "Please fill in Organization Name for Training Provider." });
       }
     }
 
@@ -193,6 +200,18 @@ export const register = async (req, res) => {
         },
         { transaction }
       );
+    } else if (role === "training_provider") {
+      roleProfile = await TrainingProvider.create(
+        {
+          userId: newUser.id,
+          organizationName,
+          organizationType: organizationType || "Training Institute",
+          websiteUrl: website || null,
+          bio: organizationDescription || null,
+          specializations: Array.isArray(skills) ? skills : [],
+        },
+        { transaction }
+      );
     }
 
     // 6. Commit transaction
@@ -249,6 +268,7 @@ export const login = async (req, res) => {
         { model: Student, as: "studentProfile" },
         { model: JobPoster, as: "jobPosterProfile" },
         { model: Client, as: "clientProfile" },
+        { model: TrainingProvider, as: "trainingProviderProfile" },
       ],
     });
 
@@ -280,6 +300,7 @@ export const login = async (req, res) => {
       studentProfile: user.studentProfile || null,
       jobPosterProfile: user.jobPosterProfile || null,
       clientProfile: user.clientProfile || null,
+      trainingProviderProfile: user.trainingProviderProfile || null,
     };
 
     return res.status(200).json({
@@ -306,6 +327,7 @@ export const getMe = async (req, res) => {
         { model: Student, as: "studentProfile" },
         { model: JobPoster, as: "jobPosterProfile" },
         { model: Client, as: "clientProfile" },
+        { model: TrainingProvider, as: "trainingProviderProfile" },
       ],
     });
 
