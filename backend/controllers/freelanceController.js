@@ -27,7 +27,17 @@ export const getProjects = async (req, res) => {
 
     const whereClause = {};
     if (clientId) {
-      whereClause.clientId = clientId;
+      const userProposals = await FreelanceProposal.findAll({
+        where: { studentId: clientId },
+        attributes: ["projectId"],
+      });
+      const proposalProjectIds = userProposals.map((p) => p.projectId);
+
+      whereClause[Op.or] = [
+        { clientId: clientId },
+        { hiredStudentId: clientId },
+        ...(proposalProjectIds.length > 0 ? [{ id: { [Op.in]: proposalProjectIds } }] : []),
+      ];
     } else {
       whereClause.status = "open";
     }
@@ -352,8 +362,26 @@ export const deleteProject = async (req, res) => {
       return res.status(404).json({ message: "Freelance post not found." });
     }
 
-    if (req.user && project.clientId && project.clientId !== req.user.id) {
-      return res.status(403).json({ message: "Not authorized to delete this post." });
+    const isOwner = req.user && project.clientId === req.user.id;
+    const isHiredParty = req.user && project.hiredStudentId === req.user.id;
+
+    // Check if user submitted a proposal for this project
+    const userProposal = req.user
+      ? await FreelanceProposal.findOne({
+          where: { projectId: id, studentId: req.user.id },
+        })
+      : null;
+
+    if (!isOwner && !isHiredParty && !userProposal) {
+      return res.status(403).json({ message: "Not authorized to remove or delete this item." });
+    }
+
+    if (userProposal && !isOwner) {
+      await userProposal.destroy();
+      return res.status(200).json({
+        message: "Project removed from your workspace successfully.",
+        id,
+      });
     }
 
     await project.destroy();
@@ -472,12 +500,15 @@ export const payAndHireProposal = async (req, res) => {
       return res.status(404).json({ message: "Proposal not found." });
     }
 
-    if (proposal.project && proposal.project.clientId !== clientId) {
+    if (proposal.project && proposal.project.clientId !== clientId && proposal.studentId !== clientId) {
       return res.status(403).json({ message: "Not authorized to accept or pay for proposals on this project." });
     }
 
     const transactionId = `TXN-PROP-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const paidAmount = parseFloat(proposal.proposedPrice) || 0;
+    const reqAmount = parseFloat(req.body.amount);
+    const paidAmount = (!isNaN(reqAmount) && reqAmount > 0)
+      ? reqAmount
+      : parseFloat(proposal.proposedPrice) || parseFloat(proposal.project?.budgetMin) || parseFloat(proposal.project?.budget) || 0;
 
     await proposal.update({
       status: "accepted",
@@ -518,17 +549,27 @@ export const payAndHireProposal = async (req, res) => {
 // @access  Private (Client)
 export const getClientReceivedProposals = async (req, res) => {
   try {
-    const clientId = req.user.id;
+    const userId = req.user.id;
 
-    const clientProjects = await FreelanceProject.findAll({
-      where: { clientId },
+    const userProjects = await FreelanceProject.findAll({
+      where: {
+        [Op.or]: [
+          { clientId: userId },
+          { hiredStudentId: userId },
+        ],
+      },
       attributes: ["id"],
     });
 
-    const projectIds = clientProjects.map((p) => p.id);
+    const projectIds = userProjects.map((p) => p.id);
 
     const proposals = await FreelanceProposal.findAll({
-      where: { projectId: projectIds },
+      where: {
+        [Op.or]: [
+          ...(projectIds.length > 0 ? [{ projectId: { [Op.in]: projectIds } }] : []),
+          { studentId: userId },
+        ],
+      },
       include: [
         {
           model: FreelanceProject,

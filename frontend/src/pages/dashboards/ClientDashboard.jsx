@@ -119,7 +119,7 @@ const ClientDashboard = () => {
 
   const fetchMyProjects = async (userId) => {
     try {
-      const response = await fetch(`/api/freelance-projects?clientId=${userId}`);
+      const response = await fetch(`/api/freelance-projects?clientId=${userId}&limit=100`);
       if (response.ok) {
         const data = await response.json();
         setMyProjects(data.projects || data.data || []);
@@ -371,7 +371,7 @@ const ClientDashboard = () => {
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
                     <BriefcaseBusiness className="text-emerald-600" size={20} />
-                    Hired Jobs & Posted Projects
+                    Hired Jobs
                     {myProjects.length > 0 && (
                       <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
                         {myProjects.length}
@@ -550,6 +550,12 @@ const ClientDashboard = () => {
                   const project = prop.project || {};
                   const isPaid = prop.paymentStatus === "paid" || prop.status === "accepted";
 
+                  const propNum = parseFloat(prop.proposedPrice || 0);
+                  const projMinNum = parseFloat(project.budgetMin || 0);
+                  const projBudgetNum = parseFloat(String(project.budget || "").replace(/[^0-9.]/g, ""));
+                  const numericPrice = propNum > 0 ? propNum : (projMinNum > 0 ? projMinNum : (!isNaN(projBudgetNum) && projBudgetNum > 0 ? projBudgetNum : 0));
+                  const formattedPrice = numericPrice > 0 ? `$${numericPrice.toFixed(2)}` : (project.budget || "$0.00");
+
                   return (
                     <div
                       key={prop.id}
@@ -583,10 +589,10 @@ const ClientDashboard = () => {
 
                           <div className="text-right">
                             <span className="text-[10px] uppercase font-bold text-slate-400">
-                              Proposed Price
+                              {propNum > 0 ? "Proposed Price" : "Activity / Post Price"}
                             </span>
-                            <p className="text-base font-extrabold text-emerald-600 leading-none">
-                              ${parseFloat(prop.proposedPrice || 0).toFixed(2)}
+                            <p className="text-base font-extrabold text-emerald-600 leading-none mt-1">
+                              {formattedPrice}
                             </p>
                           </div>
                         </div>
@@ -644,13 +650,16 @@ const ClientDashboard = () => {
                         ) : (
                           <button
                             onClick={() => {
-                              setSelectedProposalForPayment(prop);
+                              setSelectedProposalForPayment({
+                                ...prop,
+                                calculatedAmount: numericPrice,
+                              });
                               setShowPaymentModal(true);
                             }}
                             className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition"
                           >
                             <CreditCard size={16} />
-                            Pay ${parseFloat(prop.proposedPrice || 0).toFixed(2)} & Hire Student
+                            Pay {formattedPrice} & Hire Student
                           </button>
                         )}
                       </div>
@@ -783,7 +792,7 @@ const ClientDashboard = () => {
               id: selectedProposalForPayment.projectId,
               proposalId: selectedProposalForPayment.id,
               title: selectedProposalForPayment.project?.title || "Freelance Project Proposal",
-              amount: selectedProposalForPayment.proposedPrice,
+              amount: selectedProposalForPayment.calculatedAmount || selectedProposalForPayment.proposedPrice || selectedProposalForPayment.project?.budgetMin || selectedProposalForPayment.project?.budget,
               freelancerName: selectedProposalForPayment.student?.fullName || "Student Freelancer",
               category: selectedProposalForPayment.project?.category || "Freelance",
               type: "proposal",

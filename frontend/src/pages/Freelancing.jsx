@@ -400,31 +400,6 @@ const Freelancing = ({ user }) => {
               Offer custom services (gigs), set your starting price, showcase portfolio photos, and deliver quality work to real buyers.
             </p>
           </div>
-
-          <div className="shrink-0">
-            <button
-              onClick={() => {
-                if (!currentUser) {
-                  navigate("/login");
-                } else {
-                  setShowPostModal(true);
-                }
-              }}
-              className="inline-flex items-center gap-2.5 rounded-2xl bg-amber-400 px-7 py-4 text-base font-bold text-slate-950 shadow-2xl transition hover:bg-amber-300 hover:scale-105 active:scale-95"
-            >
-              {currentUser?.role === "client" || currentUser?.role === "job_poster" ? (
-                <>
-                  <Plus size={20} />
-                  + Post What You Want Built / Request Student
-                </>
-              ) : (
-                <>
-                  <Zap size={20} className="fill-slate-950" />
-                  ⚡ Sell Your Skill / Post Fixed Price Gig
-                </>
-              )}
-            </button>
-          </div>
         </div>
       </section>
 

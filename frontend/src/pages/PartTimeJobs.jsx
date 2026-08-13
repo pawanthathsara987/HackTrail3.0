@@ -138,12 +138,15 @@ const fetchJobs = async ({
     params.append("limit", limit);
     params.append("sort", sort);
 
+    const token = localStorage.getItem("token");
+
     const response = await fetch(
         `${API_BASE_URL}/api/jobs?${params.toString()}`,
         {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
         }
     );
@@ -1628,13 +1631,24 @@ const JobCard = ({
                         View Details
                     </button>
 
-                    <button
-                        type="button"
-                        onClick={onApply}
-                        className="flex-1 rounded-xl bg-indigo-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-700"
-                    >
-                        Apply Now
-                    </button>
+                    {job.hasApplied ? (
+                        <button
+                            type="button"
+                            disabled
+                            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-sm font-bold text-white shadow-sm"
+                        >
+                            <CheckCircle2 size={16} />
+                            Applied
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={onApply}
+                            className="flex-1 rounded-xl bg-indigo-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-700"
+                        >
+                            Apply Now
+                        </button>
+                    )}
 
                 </div>
             </div>

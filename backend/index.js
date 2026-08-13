@@ -32,15 +32,10 @@ app.use("/api/training", trainingRoutes);
 app.use("/api/training-programs", trainingRoutes);
 app.use("/api/freelance-projects", freelanceRoutes);
 
+import { syncDatabase } from "./config/syncDatabase.js";
+
 // Sync Models
-sequelize
-  .sync({ alter: true })
-  .then(() => {
-    console.log("✅ Database synchronized");
-  })
-  .catch((error) => {
-    console.log(error.message);
-  });
+syncDatabase();
 
 // Server
 const PORT = process.env.PORT || 3002;
