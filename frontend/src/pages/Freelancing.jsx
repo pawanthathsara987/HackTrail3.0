@@ -412,8 +412,17 @@ const Freelancing = ({ user }) => {
               }}
               className="inline-flex items-center gap-2.5 rounded-2xl bg-amber-400 px-7 py-4 text-base font-bold text-slate-950 shadow-2xl transition hover:bg-amber-300 hover:scale-105 active:scale-95"
             >
-              <Zap size={20} className="fill-slate-950" />
-              ⚡ Sell Your Skill / Post a Gig
+              {currentUser?.role === "client" || currentUser?.role === "job_poster" ? (
+                <>
+                  <Plus size={20} />
+                  + Post What You Want Built / Request Student
+                </>
+              ) : (
+                <>
+                  <Zap size={20} className="fill-slate-950" />
+                  ⚡ Sell Your Skill / Post Fixed Price Gig
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -642,7 +651,7 @@ const Freelancing = ({ user }) => {
                       View Details
                     </Link>
 
-                    {currentUser && currentUser.id === project.clientId && (
+                    {currentUser && currentUser.role === "student" && currentUser.id === project.clientId && (
                       <>
                         <button
                           onClick={() => handleEditClick(project)}
@@ -714,11 +723,15 @@ const Freelancing = ({ user }) => {
                 <div className="flex items-center gap-2">
                   <Zap size={22} className="text-amber-500 fill-amber-400" />
                   <h3 className="text-xl font-bold text-gray-900">
-                    Sell Your Skill / Post a Gig (Fiverr Style)
+                    {currentUser?.role === "client" || currentUser?.role === "job_poster"
+                      ? "Post What You Want Built / Request Student"
+                      : "Sell Your Skill / Post Fixed Price Gig"}
                   </h3>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Offer your expertise, upload portfolio samples, set your starting price, and get hired!
+                  {currentUser?.role === "client" || currentUser?.role === "job_poster"
+                    ? "Describe what work or project you need done by student freelancers, set your budget, and get proposals!"
+                    : "Offer your expertise, upload portfolio samples, set your fixed starting price, and get hired!"}
                 </p>
               </div>
 
