@@ -658,6 +658,8 @@ const StudentDashboard = () => {
                     )}
                   </div>
                 )}
+              </div>
+
               {/* Applied Part-Time Jobs */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -1323,92 +1325,6 @@ const StudentDashboard = () => {
                 </div>
               )}
             </div>
-          </div>
-        )}
-                <Zap size={48} className="mx-auto text-amber-400" />
-                <h3 className="mt-4 text-lg font-bold text-slate-800">
-                  You haven't posted any freelance gigs yet
-                </h3>
-                <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">
-                  Showcase your skills to potential clients and start earning money today.
-                </p>
-                <button
-                  onClick={() =>
-                    navigate("/freelancing", {
-                      state: { openPostModal: true },
-                    })
-                  }
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 font-bold text-white hover:bg-emerald-600 transition"
-                >
-                  <Plus size={18} />
-                  Post Your First Skill Gig
-                </button>
-              </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {myGigs.map((gig) => (
-                  <div
-                    key={gig.id}
-                    className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition"
-                  >
-                    <div>
-                      {gig.projectImage && (
-                        <div className="mb-4 h-36 w-full overflow-hidden rounded-2xl bg-slate-100">
-                          <img
-                            src={gig.projectImage}
-                            alt={gig.title}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                          {gig.category}
-                        </span>
-
-                        <span className="font-extrabold text-emerald-600 text-sm">
-                          {gig.budget}
-                        </span>
-                      </div>
-
-                      <h3 className="mt-3 text-base font-bold text-slate-900 line-clamp-2">
-                        {gig.title}
-                      </h3>
-
-                      <p className="mt-2 text-xs text-slate-500 line-clamp-2">
-                        {gig.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-5 border-t border-slate-100 pt-4 flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-slate-500">
-                        Proposals: <strong className="text-slate-800">{gig.proposalsCount || 0}</strong>
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        <Link
-                          to={`/freelancing/${gig.id}`}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800"
-                        >
-                          <Eye size={14} />
-                          View
-                        </Link>
-
-                        <button
-                          onClick={() => handleDeleteGig(gig.id)}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800"
-                          title="Delete Gig"
-                        >
-                          <Trash2 size={14} />
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
