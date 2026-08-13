@@ -928,15 +928,27 @@ const PartTimeJobDetails = () => {
                                         role === "STUDENT" && (
                                             <>
                                                 {alreadyApplied ? (
-                                                    <button
-                                                        disabled
-                                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3.5 font-semibold text-white"
-                                                    >
-                                                        <CheckCircle2
-                                                            size={19}
-                                                        />
-                                                        Application Submitted
-                                                    </button>
+                                                    <div className="space-y-3">
+                                                        <button
+                                                            disabled
+                                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 font-semibold text-white shadow-sm"
+                                                        >
+                                                            <CheckCircle2
+                                                                size={19}
+                                                            />
+                                                            Application Submitted
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                navigate("/student/dashboard", {
+                                                                    state: { activeTab: "jobs" },
+                                                                })
+                                                            }
+                                                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-3 font-semibold text-indigo-700 hover:bg-indigo-100 transition text-sm"
+                                                        >
+                                                            View Applied Jobs in Dashboard
+                                                        </button>
+                                                    </div>
                                                 ) : (
                                                     <button
                                                         onClick={
