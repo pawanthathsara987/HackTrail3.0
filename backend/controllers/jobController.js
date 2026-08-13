@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Job, JobApplication, JobBookmark, User } from "../models/index.js";
+import { Job, JobApplication, JobBookmark, User, Student } from "../models/index.js";
 import { uploadBase64ToSupabase } from "../services/uploadService.js";
 
 // @desc    Get all part-time jobs with search, filters, pagination, and sorting
@@ -272,6 +272,25 @@ export const getMyJobs = async (req, res) => {
     const jobPosterId = req.user.id;
     const jobs = await Job.findAll({
       where: { jobPosterId },
+      include: [
+        {
+          model: JobApplication,
+          as: "applications",
+          include: [
+            {
+              model: User,
+              as: "applicant",
+              attributes: ["id", "fullName", "email", "phone", "location", "profilePhoto"],
+              include: [
+                {
+                  model: Student,
+                  as: "studentProfile",
+                },
+              ],
+            },
+          ],
+        },
+      ],
       order: [["createdAt", "DESC"]],
     });
 
@@ -327,6 +346,43 @@ export const getMyApplications = async (req, res) => {
   } catch (error) {
     console.error("Error fetching student job applications:", error);
     return res.status(500).json({ message: error.message || "Server error fetching applications." });
+  }
+};
+
+// @desc    Update status of a job application (accept, reject, review)
+// @route   PUT /api/jobs/applications/:applicationId/status
+// @access  Private (Job Poster)
+export const updateApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { status } = req.body;
+
+    if (!["pending", "reviewed", "accepted", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid application status." });
+    }
+
+    const application = await JobApplication.findByPk(applicationId, {
+      include: [{ model: Job, as: "job" }],
+    });
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found." });
+    }
+
+    if (application.job.jobPosterId !== req.user.id && req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Not authorized to update this application." });
+    }
+
+    application.status = status;
+    await application.save();
+
+    return res.status(200).json({
+      message: `Application status updated to ${status}`,
+      application,
+    });
+  } catch (error) {
+    console.error("Error updating application status:", error);
+    return res.status(500).json({ message: error.message || "Server error updating application status." });
   }
 };
 

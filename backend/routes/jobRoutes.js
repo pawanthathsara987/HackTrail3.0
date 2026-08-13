@@ -8,6 +8,7 @@ import {
   applyForJob,
   toggleBookmark,
   getMyApplications,
+  updateApplicationStatus,
 } from "../controllers/jobController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -26,6 +27,7 @@ const optionalAuth = (req, res, next) => {
 router.get("/", getJobs);
 router.get("/my-jobs", protect, getMyJobs);
 router.get("/my-applications", protect, getMyApplications);
+router.put("/applications/:applicationId/status", protect, updateApplicationStatus);
 router.get("/:id", optionalAuth, getJobById);
 router.post("/", protect, createJob);
 router.delete("/:id", protect, deleteJob);
