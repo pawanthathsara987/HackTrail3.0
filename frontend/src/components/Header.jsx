@@ -75,16 +75,18 @@ const Header = () => {
             Home
           </Link>
 
-          <Link
-            to="/part-time-jobs"
-            className={`text-sm font-medium transition ${
-              isActive("/part-time-jobs")
-                ? "text-blue-600 font-bold"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            Part-Time Jobs
-          </Link>
+          {user?.role !== "client" && user?.role !== "job_poster" && (
+            <Link
+              to="/part-time-jobs"
+              className={`text-sm font-medium transition ${
+                isActive("/part-time-jobs")
+                  ? "text-blue-600 font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Part-Time Jobs
+            </Link>
+          )}
 
           <Link
             to="/freelancing"
@@ -97,16 +99,18 @@ const Header = () => {
             Freelancing
           </Link>
 
-          <Link
-            to="/training"
-            className={`text-sm font-medium transition ${
-              isActive("/training")
-                ? "text-blue-600 font-bold"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            Training Programs
-          </Link>
+          {user?.role !== "client" && user?.role !== "job_poster" && (
+            <Link
+              to="/training"
+              className={`text-sm font-medium transition ${
+                isActive("/training")
+                  ? "text-blue-600 font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Training Programs
+            </Link>
+          )}
 
           <Link
             to="/how-it-works"
@@ -203,13 +207,15 @@ const Header = () => {
               Home
             </Link>
 
-            <Link
-              to="/part-time-jobs"
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Part-Time Jobs
-            </Link>
+            {user?.role !== "client" && user?.role !== "job_poster" && (
+              <Link
+                to="/part-time-jobs"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Part-Time Jobs
+              </Link>
+            )}
 
             <Link
               to="/freelancing"
@@ -219,13 +225,15 @@ const Header = () => {
               Freelancing
             </Link>
 
-            <Link
-              to="/training"
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Training Programs
-            </Link>
+            {user?.role !== "client" && user?.role !== "job_poster" && (
+              <Link
+                to="/training"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Training Programs
+              </Link>
+            )}
 
             <Link
               to="/how-it-works"

@@ -94,17 +94,7 @@ export const register = async (req, res) => {
           .json({ message: "Please fill in all required organization details." });
       }
     } else if (role === "client") {
-      if (
-        !servicesInterested ||
-        !projectCategories ||
-        !budgetRange ||
-        !preferredSkills
-      ) {
-        await transaction.rollback();
-        return res
-          .status(400)
-          .json({ message: "Please fill in all required client details." });
-      }
+      // Clients do not need to provide hiring preferences upon registration
     } else if (role === "training_provider") {
       if (!organizationName) {
         await transaction.rollback();
@@ -192,10 +182,10 @@ export const register = async (req, res) => {
       roleProfile = await Client.create(
         {
           userId: newUser.id,
-          servicesInterested,
-          projectCategories,
-          budgetRange,
-          preferredSkills,
+          servicesInterested: servicesInterested || "General Student Hiring",
+          projectCategories: projectCategories || "Freelance & Projects",
+          budgetRange: budgetRange || "Flexible",
+          preferredSkills: preferredSkills || "Student Skills",
           hiringDescription: hiringDescription || null,
         },
         { transaction }
