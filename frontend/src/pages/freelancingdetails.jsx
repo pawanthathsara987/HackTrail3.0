@@ -693,19 +693,6 @@ const FreelanceProjectDetails = ({ user }) => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {/* Fiverr Style Option 1: Buy Gig Directly */}
-                  <button
-                    onClick={() => {
-                      if (!user) {
-                        navigate("/login");
-                      } else {
-                        setShowDirectBuyModal(true);
-                      }
-                    }}
-                    className="w-full rounded-2xl bg-amber-400 py-3.5 px-4 font-extrabold text-slate-950 shadow-md transition hover:bg-amber-300 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95"
-                  >
-                    ⚡ Buy / Order Gig ({project.budget || "Fixed Price"})
-                  </button>
 
                   {/* Option 2: Custom Proposal */}
                   <button

@@ -68,10 +68,36 @@ export const getJobs = async (req, res) => {
       order,
     });
 
+    let appliedJobIds = [];
+    let bookmarkedJobIds = [];
+
+    if (req.user) {
+      const userApps = await JobApplication.findAll({
+        where: { studentId: req.user.id },
+        attributes: ["jobId"],
+      });
+      appliedJobIds = userApps.map((a) => a.jobId);
+
+      const userBookmarks = await JobBookmark.findAll({
+        where: { userId: req.user.id },
+        attributes: ["jobId"],
+      });
+      bookmarkedJobIds = userBookmarks.map((b) => b.jobId);
+    }
+
+    const jobsWithStatus = rows.map((j) => {
+      const jobJson = j.toJSON();
+      return {
+        ...jobJson,
+        hasApplied: appliedJobIds.includes(j.id),
+        isSaved: bookmarkedJobIds.includes(j.id),
+      };
+    });
+
     const totalPages = Math.ceil(count / limitNum) || 1;
 
     return res.status(200).json({
-      jobs: rows,
+      jobs: jobsWithStatus,
       total: count,
       page: pageNum,
       limit: limitNum,
@@ -118,8 +144,12 @@ export const getJobById = async (req, res) => {
       hasBookmarked = !!bookmark;
     }
 
+    const jobJson = job.toJSON();
+    jobJson.hasApplied = hasApplied;
+    jobJson.isSaved = hasBookmarked;
+
     return res.status(200).json({
-      job,
+      job: jobJson,
       hasApplied,
       hasBookmarked,
     });

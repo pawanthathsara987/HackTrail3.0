@@ -24,7 +24,7 @@ const optionalAuth = (req, res, next) => {
   next();
 };
 
-router.get("/", getJobs);
+router.get("/", optionalAuth, getJobs);
 router.get("/my-jobs", protect, getMyJobs);
 router.get("/my-applications", protect, getMyApplications);
 router.put("/applications/:applicationId/status", protect, updateApplicationStatus);
