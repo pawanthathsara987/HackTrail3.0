@@ -21,7 +21,6 @@ import {
   Paperclip,
   Trash2,
   Eye,
-  Clock,
 } from "lucide-react";
 import FreelancePaymentModal from "../../components/FreelancePaymentModal";
 
