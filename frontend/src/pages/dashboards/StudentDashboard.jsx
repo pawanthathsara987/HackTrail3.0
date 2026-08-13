@@ -27,15 +27,19 @@ import {
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "courses" | "gigs" | "edit"
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "courses" | "jobs" | "gigs" | "edit"
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const [userData, setUserData] = useState(null);
   const [myGigs, setMyGigs] = useState([]);
+  const [myProposals, setMyProposals] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [appliedJobs, setAppliedJobs] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+  const [loadingProposals, setLoadingProposals] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -58,6 +62,8 @@ const StudentDashboard = () => {
   useEffect(() => {
     fetchProfile();
     fetchEnrolledCourses();
+    fetchAppliedJobs();
+    fetchMyProposals();
   }, []);
 
   const fetchProfile = async () => {
@@ -141,6 +147,46 @@ const StudentDashboard = () => {
       console.error("Failed to fetch enrolled courses:", e);
     } finally {
       setLoadingCourses(false);
+    }
+  };
+
+  const fetchAppliedJobs = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setLoadingJobs(true);
+    try {
+      const response = await fetch("/api/jobs/my-applications", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAppliedJobs(data.applications || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch applied jobs:", e);
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
+
+  const fetchMyProposals = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setLoadingProposals(true);
+    try {
+      const response = await fetch("/api/freelance-projects/my-proposals", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMyProposals(data.proposals || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch my proposals:", e);
+    } finally {
+      setLoadingProposals(false);
     }
   };
 
@@ -371,6 +417,18 @@ const StudentDashboard = () => {
               </button>
 
               <button
+                onClick={() => setActiveTab("jobs")}
+                className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeTab === "jobs"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-white/10 text-slate-200 hover:bg-white/15"
+                }`}
+              >
+                <Briefcase size={16} className="text-indigo-300" />
+                Applied Jobs ({appliedJobs.length})
+              </button>
+
+              <button
                 onClick={() => setActiveTab("gigs")}
                 className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                   activeTab === "gigs"
@@ -379,7 +437,7 @@ const StudentDashboard = () => {
                 }`}
               >
                 <Zap size={16} className="text-amber-400 fill-amber-400" />
-                My Posted Gigs ({myGigs.length})
+                Freelance ({myGigs.length + myProposals.length})
               </button>
 
               <button
@@ -596,6 +654,112 @@ const StudentDashboard = () => {
                         className="w-full text-center py-2 text-xs font-semibold text-blue-600 hover:underline"
                       >
                         View All Enrolled Courses ({enrolledCourses.length}) →
+                      </button>
+                    )}
+                  </div>
+                )}
+              {/* Applied Part-Time Jobs */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <Briefcase className="text-indigo-600" size={20} />
+                    Applied / Enrolled Part-Time Jobs
+                    {appliedJobs.length > 0 && (
+                      <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700">
+                        {appliedJobs.length}
+                      </span>
+                    )}
+                  </h3>
+                  <Link
+                    to="/part-time-jobs"
+                    className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
+                  >
+                    Browse Jobs
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+
+                {loadingJobs ? (
+                  <div className="py-8 text-center text-sm text-slate-500">
+                    Loading your job applications...
+                  </div>
+                ) : appliedJobs.length === 0 ? (
+                  <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center border border-dashed border-slate-200">
+                    <Briefcase size={36} className="mx-auto text-slate-400" />
+                    <h4 className="mt-3 font-bold text-slate-800">No Job Applications Yet</h4>
+                    <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                      Explore flexible part-time jobs tailored for students and start earning while learning.
+                    </p>
+                    <Link
+                      to="/part-time-jobs"
+                      className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-indigo-700 transition"
+                    >
+                      <Sparkles size={14} />
+                      Find Part-Time Jobs
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-4">
+                    {appliedJobs.slice(0, 3).map((item) => {
+                      const job = item.job || {};
+                      const statusColor =
+                        item.status === "accepted"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : item.status === "rejected"
+                          ? "bg-red-100 text-red-700"
+                          : item.status === "reviewed"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-amber-100 text-amber-800";
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-white hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-indigo-50 border border-slate-200 flex items-center justify-center font-bold text-indigo-600 text-xs">
+                              {job.image || job.companyLogo ? (
+                                <img
+                                  src={job.image || job.companyLogo}
+                                  alt={job.title}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <Briefcase size={20} />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-slate-900 text-sm truncate">
+                                {job.title || "Job Application"}
+                              </h4>
+                              <p className="text-xs text-slate-500 truncate">
+                                {job.companyName || "Company"} • {job.location || "Remote"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${statusColor}`}>
+                              {item.status || "Pending"}
+                            </span>
+                            <Link
+                              to={`/part-time-jobs/${job.id || item.jobId}`}
+                              className="flex items-center gap-1 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 transition"
+                            >
+                              <Eye size={14} />
+                              View Job
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {appliedJobs.length > 3 && (
+                      <button
+                        onClick={() => setActiveTab("jobs")}
+                        className="w-full text-center py-2 text-xs font-semibold text-indigo-600 hover:underline"
+                      >
+                        View All Applied Jobs ({appliedJobs.length}) →
                       </button>
                     )}
                   </div>
@@ -847,17 +1011,158 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {/* TAB 2: MY POSTED GIGS */}
-        {activeTab === "gigs" && (
+        {/* TAB: APPLIED PART-TIME JOBS */}
+        {activeTab === "jobs" && (
           <div className="mt-8 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <Zap size={22} className="text-amber-500 fill-amber-400" />
-                  My Posted Freelance Services & Gigs
+                  <Briefcase size={22} className="text-indigo-600" />
+                  My Applied & Enrolled Part-Time Jobs
                 </h2>
                 <p className="text-sm text-slate-500 mt-1">
-                  Manage your active freelance posts, track orders, and publish new skills.
+                  Track status of your submitted job applications and view company updates.
+                </p>
+              </div>
+
+              <Link
+                to="/part-time-jobs"
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white shadow-md hover:bg-indigo-700 transition"
+              >
+                <Sparkles size={18} />
+                Explore Part-Time Jobs
+              </Link>
+            </div>
+
+            {loadingJobs ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm text-slate-500">
+                Loading your applied jobs...
+              </div>
+            ) : appliedJobs.length === 0 ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                <Briefcase size={48} className="mx-auto text-slate-300" />
+                <h3 className="mt-4 text-lg font-bold text-slate-800">
+                  No Job Applications Found
+                </h3>
+                <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">
+                  You haven't applied for any part-time jobs yet. Browse flexible student opportunities to start earning!
+                </p>
+
+                <Link
+                  to="/part-time-jobs"
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-bold text-white shadow-lg hover:bg-indigo-700 transition"
+                >
+                  <Sparkles size={18} />
+                  Find Part-Time Jobs
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {appliedJobs.map((item) => {
+                  const job = item.job || {};
+                  const statusColor =
+                    item.status === "accepted"
+                      ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                      : item.status === "rejected"
+                      ? "bg-red-100 text-red-700 border-red-200"
+                      : item.status === "reviewed"
+                      ? "bg-blue-100 text-blue-700 border-blue-200"
+                      : "bg-amber-100 text-amber-800 border-amber-200";
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-12 w-12 overflow-hidden rounded-2xl bg-indigo-50 border border-slate-200 flex items-center justify-center font-bold text-indigo-600">
+                              {job.image || job.companyLogo ? (
+                                <img
+                                  src={job.image || job.companyLogo}
+                                  alt={job.title}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <Briefcase size={22} />
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-900 text-base line-clamp-1">
+                                {job.title || "Job Application"}
+                              </h4>
+                              <p className="text-xs text-slate-500">
+                                {job.companyName || "Company"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-medium">Application Status:</span>
+                            <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold capitalize ${statusColor}`}>
+                              {item.status || "Pending"}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+                            <span className="rounded-lg bg-slate-100 px-2.5 py-1 font-medium">
+                              📍 {job.location || "Remote"}
+                            </span>
+                            <span className="rounded-lg bg-slate-100 px-2.5 py-1 font-medium">
+                              ⏱️ {job.jobType || "Part-Time"}
+                            </span>
+                            {job.salary && (
+                              <span className="rounded-lg bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-1">
+                                💰 {job.salary}
+                              </span>
+                            )}
+                          </div>
+
+                          {item.coverLetter && (
+                            <div className="rounded-xl bg-slate-50 p-3 text-xs text-slate-600 border border-slate-100">
+                              <p className="font-semibold text-slate-700 mb-1">Cover Letter:</p>
+                              <p className="line-clamp-2 italic text-slate-500">"{item.coverLetter}"</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-6 border-t border-slate-100 pt-4 flex items-center justify-between text-xs">
+                        <span className="text-slate-400">
+                          Applied: {new Date(item.createdAt).toLocaleDateString()}
+                        </span>
+
+                        <Link
+                          to={`/part-time-jobs/${job.id || item.jobId}`}
+                          className="inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-3.5 py-2 font-bold text-white shadow hover:bg-indigo-700 transition"
+                        >
+                          <Eye size={14} />
+                          Job Details
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: MY FREELANCE SERVICES & PROPOSALS */}
+        {activeTab === "gigs" && (
+          <div className="mt-8 space-y-8">
+            {/* Header Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <Zap size={22} className="text-amber-500 fill-amber-400" />
+                  My Freelance Services & Submitted Proposals
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Manage your posted freelance gigs, services, and view submitted client proposals.
                 </p>
               </div>
 
@@ -870,12 +1175,156 @@ const StudentDashboard = () => {
                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white shadow-md hover:bg-emerald-700 transition"
               >
                 <Plus size={18} />
-                + Post New Skill / Gig
+                + Post New Skill / Service
               </button>
             </div>
 
-            {myGigs.length === 0 ? (
-              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+            {/* SECTION A: POSTED GIGS / SERVICES */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-4">
+                <Zap size={18} className="text-amber-500" />
+                My Posted Freelance Services ({myGigs.length})
+              </h3>
+
+              {myGigs.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                  <Zap size={36} className="mx-auto text-slate-400" />
+                  <h4 className="mt-3 font-bold text-slate-800">No Posted Freelance Services</h4>
+                  <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                    Post your skills (e.g. Graphic Design, Web Development, Content Writing) so clients can hire you.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {myGigs.map((g) => (
+                    <div
+                      key={g.id || g._id}
+                      className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-white hover:shadow-md"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 uppercase">
+                            {g.category || "Service"}
+                          </span>
+                          <span className="text-xs font-bold text-emerald-600">
+                            {g.budget}
+                          </span>
+                        </div>
+                        <h4 className="mt-3 font-bold text-slate-900 text-sm line-clamp-2">
+                          {g.title}
+                        </h4>
+                        <p className="mt-1 text-xs text-slate-500 line-clamp-2">
+                          {g.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 border-t border-slate-200/60 pt-3 flex items-center justify-between">
+                        <Link
+                          to={`/freelancing/${g.id || g._id}`}
+                          className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+                        >
+                          <Eye size={14} />
+                          View
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteGig(g.id || g._id)}
+                          className="flex items-center gap-1 text-xs font-semibold text-red-600 hover:underline"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* SECTION B: SUBMITTED PROPOSALS / APPLICATIONS */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-4">
+                <Code2 size={18} className="text-blue-600" />
+                My Submitted Proposals & Applications ({myProposals.length})
+              </h3>
+
+              {loadingProposals ? (
+                <div className="py-8 text-center text-sm text-slate-500">
+                  Loading your proposals...
+                </div>
+              ) : myProposals.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                  <Code2 size={36} className="mx-auto text-slate-400" />
+                  <h4 className="mt-3 font-bold text-slate-800">No Proposals Submitted Yet</h4>
+                  <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                    Browse active client freelance projects and submit custom bids/proposals.
+                  </p>
+                  <Link
+                    to="/freelancing"
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition"
+                  >
+                    <Sparkles size={14} />
+                    Browse Freelance Projects
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {myProposals.map((item) => {
+                    const project = item.project || {};
+                    const statusColor =
+                      item.status === "accepted"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : item.status === "rejected"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-amber-100 text-amber-800";
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-white hover:shadow-md"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-blue-600">
+                              Proposed: Rs. {Number(item.proposedPrice).toLocaleString()}
+                            </span>
+                            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${statusColor}`}>
+                              {item.status || "Pending"}
+                            </span>
+                          </div>
+
+                          <h4 className="mt-3 font-bold text-slate-900 text-sm line-clamp-2">
+                            {project.title || "Freelance Project"}
+                          </h4>
+
+                          <p className="mt-1 text-xs text-slate-500 line-clamp-2 italic">
+                            "{item.coverLetter}"
+                          </p>
+
+                          <div className="mt-3 text-xs text-slate-500">
+                            ⏱️ Delivery: <span className="font-semibold text-slate-700">{item.deliveryTime}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 border-t border-slate-200/60 pt-3 flex items-center justify-between text-xs">
+                          <span className="text-slate-400">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </span>
+                          <Link
+                            to={`/freelancing/${project.id || item.projectId}`}
+                            className="flex items-center gap-1 font-bold text-blue-600 hover:underline"
+                          >
+                            <Eye size={14} />
+                            View Project
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
                 <Zap size={48} className="mx-auto text-amber-400" />
                 <h3 className="mt-4 text-lg font-bold text-slate-800">
                   You haven't posted any freelance gigs yet
