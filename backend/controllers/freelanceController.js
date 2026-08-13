@@ -389,3 +389,197 @@ export const getMyProposals = async (req, res) => {
     return res.status(500).json({ message: error.message || "Server error fetching proposals." });
   }
 };
+
+// @desc    Customer pays & hires a student for a specific freelance gig/project
+// @route   POST /api/freelance-projects/:id/pay-and-hire
+// @access  Private (Client/Customer)
+export const payAndHireGig = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, paymentMethod, cardDetails } = req.body;
+    const clientId = req.user.id;
+
+    const project = await FreelanceProject.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "client",
+          attributes: ["id", "fullName", "email"],
+        },
+      ],
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Freelance activity not found." });
+    }
+
+    if (project.clientId === clientId) {
+      return res.status(400).json({ message: "You cannot hire yourself for your own gig." });
+    }
+
+    const transactionId = `TXN-FL-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const paidAmount = parseFloat(amount) || parseFloat(project.budgetMin) || parseFloat(project.budget) || 0;
+
+    await project.update({
+      status: "in_progress",
+      paymentStatus: "paid",
+      paidAmount,
+      transactionId,
+      paymentMethod: paymentMethod || "Credit Card",
+      paidAt: new Date(),
+      hiredStudentId: project.clientId, // If it's a student gig, project.clientId is student user ID
+    });
+
+    return res.status(200).json({
+      message: "Payment successful! You have hired the student for this freelancing activity.",
+      transactionId,
+      paidAmount,
+      paidAt: project.paidAt,
+      project,
+    });
+  } catch (error) {
+    console.error("Error processing freelancing payment:", error);
+    return res.status(500).json({ message: error.message || "Server error processing payment." });
+  }
+};
+
+// @desc    Customer pays & hires a student for a specific proposal
+// @route   POST /api/freelance-projects/proposals/:proposalId/pay-and-hire
+// @access  Private (Client/Customer)
+export const payAndHireProposal = async (req, res) => {
+  try {
+    const { proposalId } = req.params;
+    const { paymentMethod } = req.body;
+    const clientId = req.user.id;
+
+    const proposal = await FreelanceProposal.findByPk(proposalId, {
+      include: [
+        {
+          model: FreelanceProject,
+          as: "project",
+        },
+        {
+          model: User,
+          as: "student",
+          attributes: ["id", "fullName", "email", "phone"],
+        },
+      ],
+    });
+
+    if (!proposal) {
+      return res.status(404).json({ message: "Proposal not found." });
+    }
+
+    if (proposal.project && proposal.project.clientId !== clientId) {
+      return res.status(403).json({ message: "Not authorized to accept or pay for proposals on this project." });
+    }
+
+    const transactionId = `TXN-PROP-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const paidAmount = parseFloat(proposal.proposedPrice) || 0;
+
+    await proposal.update({
+      status: "accepted",
+      paymentStatus: "paid",
+      paidAmount,
+      transactionId,
+      paymentMethod: paymentMethod || "Credit Card",
+      paidAt: new Date(),
+    });
+
+    if (proposal.project) {
+      await proposal.project.update({
+        status: "in_progress",
+        paymentStatus: "paid",
+        paidAmount,
+        transactionId,
+        paymentMethod: paymentMethod || "Credit Card",
+        paidAt: new Date(),
+        hiredStudentId: proposal.studentId,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Payment completed successfully! Proposal accepted and student hired.",
+      transactionId,
+      paidAmount,
+      paidAt: proposal.paidAt,
+      proposal,
+    });
+  } catch (error) {
+    console.error("Error accepting proposal & processing payment:", error);
+    return res.status(500).json({ message: error.message || "Server error processing payment." });
+  }
+};
+
+// @desc    Get all proposals received for logged-in client's projects
+// @route   GET /api/freelance-projects/client/received-proposals
+// @access  Private (Client)
+export const getClientReceivedProposals = async (req, res) => {
+  try {
+    const clientId = req.user.id;
+
+    const clientProjects = await FreelanceProject.findAll({
+      where: { clientId },
+      attributes: ["id"],
+    });
+
+    const projectIds = clientProjects.map((p) => p.id);
+
+    const proposals = await FreelanceProposal.findAll({
+      where: { projectId: projectIds },
+      include: [
+        {
+          model: FreelanceProject,
+          as: "project",
+        },
+        {
+          model: User,
+          as: "student",
+          attributes: ["id", "fullName", "email", "phone", "profilePhoto", "location"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({ proposals });
+  } catch (error) {
+    console.error("Error fetching received proposals:", error);
+    return res.status(500).json({ message: error.message || "Server error fetching proposals." });
+  }
+};
+
+// @desc    Get proposals for a specific project
+// @route   GET /api/freelance-projects/:id/proposals
+// @access  Private (Client / Owner)
+export const getProjectProposals = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await FreelanceProject.findByPk(id);
+
+    if (!project) {
+      return res.status(404).json({ message: "Freelance project not found." });
+    }
+
+    if (req.user && project.clientId && project.clientId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to view proposals for this project." });
+    }
+
+    const proposals = await FreelanceProposal.findAll({
+      where: { projectId: id },
+      include: [
+        {
+          model: User,
+          as: "student",
+          attributes: ["id", "fullName", "email", "phone", "profilePhoto", "location"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({ proposals });
+  } catch (error) {
+    console.error("Error fetching project proposals:", error);
+    return res.status(500).json({ message: error.message || "Server error fetching proposals." });
+  }
+};
+

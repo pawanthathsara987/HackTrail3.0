@@ -15,16 +15,25 @@ import {
   Sparkles,
   PlusCircle,
   Code2,
+  CreditCard,
+  Clock,
+  FileText,
+  Paperclip,
 } from "lucide-react";
+import FreelancePaymentModal from "../../components/FreelancePaymentModal";
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "edit"
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "proposals" | "edit"
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const [userData, setUserData] = useState(null);
+  const [receivedProposals, setReceivedProposals] = useState([]);
+  const [selectedProposalForPayment, setSelectedProposalForPayment] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -39,7 +48,25 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchReceivedProposals();
   }, []);
+
+  const fetchReceivedProposals = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await fetch("/api/freelance-projects/client/received-proposals", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setReceivedProposals(data.proposals || []);
+      }
+    } catch (e) {
+      console.error("Error fetching received proposals:", e);
+    }
+  };
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
@@ -246,7 +273,7 @@ const ClientDashboard = () => {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={() => setActiveTab("overview")}
                 className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
@@ -256,6 +283,17 @@ const ClientDashboard = () => {
                 }`}
               >
                 Overview
+              </button>
+              <button
+                onClick={() => setActiveTab("proposals")}
+                className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeTab === "proposals"
+                    ? "bg-emerald-600 text-white shadow-md"
+                    : "bg-white/10 text-slate-200 hover:bg-white/15"
+                }`}
+              >
+                <FileText size={16} className="text-emerald-300" />
+                Student Proposals ({receivedProposals.length})
               </button>
               <button
                 onClick={() => setActiveTab("edit")}
@@ -417,7 +455,160 @@ const ClientDashboard = () => {
           </div>
         )}
 
-        {/* TAB 2: EDIT PROFILE */}
+        {/* TAB 2: PROPOSALS & ACTIVITY PAYMENTS */}
+        {activeTab === "proposals" && (
+          <div className="mt-8 space-y-6">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <FileText className="text-emerald-600" size={20} />
+                  Student Proposals & Activity Payments
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Review student proposals for your posted projects and complete payments to hire them.
+                </p>
+              </div>
+
+              <span className="rounded-full bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-700 self-start sm:self-auto">
+                {receivedProposals.length} Total Proposals Received
+              </span>
+            </div>
+
+            {receivedProposals.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center">
+                <FileText size={42} className="mx-auto text-slate-300" />
+                <h4 className="mt-3 font-bold text-slate-800 text-base">No Student Proposals Yet</h4>
+                <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                  When student freelancers apply for your posted projects, their proposals and pricing will appear here for you to review and pay.
+                </p>
+                <Link
+                  to="/freelancing"
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                >
+                  <PlusCircle size={15} />
+                  Browse Freelancers & Projects
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2">
+                {receivedProposals.map((prop) => {
+                  const student = prop.student || {};
+                  const project = prop.project || {};
+                  const isPaid = prop.paymentStatus === "paid" || prop.status === "accepted";
+
+                  return (
+                    <div
+                      key={prop.id}
+                      className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md flex flex-col justify-between"
+                    >
+                      <div>
+                        {/* Header info */}
+                        <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-800">
+                              {student.profilePhoto ? (
+                                <img
+                                  src={student.profilePhoto}
+                                  alt={student.fullName}
+                                  className="h-full w-full rounded-full object-cover"
+                                />
+                              ) : (
+                                student.fullName?.charAt(0) || "S"
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-900 text-sm">
+                                {student.fullName || "Student Freelancer"}
+                              </h4>
+                              <p className="text-xs text-slate-500 flex items-center gap-1">
+                                <MapPin size={12} />
+                                {student.location || "Location not set"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="text-[10px] uppercase font-bold text-slate-400">
+                              Proposed Price
+                            </span>
+                            <p className="text-base font-extrabold text-emerald-600 leading-none">
+                              ${parseFloat(prop.proposedPrice || 0).toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Project Info */}
+                        <div className="mt-4">
+                          <span className="text-[11px] font-semibold text-slate-400">
+                            Project: <span className="text-slate-800 font-bold">{project.title || "Freelance Project"}</span>
+                          </span>
+                          <p className="mt-2 text-xs text-slate-600 line-clamp-3 bg-slate-50 p-3 rounded-xl border border-slate-100 italic">
+                            "{prop.coverLetter}"
+                          </p>
+                        </div>
+
+                        {/* Proposal Specs */}
+                        <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                          <span className="flex items-center gap-1">
+                            <Clock size={13} className="text-slate-400" />
+                            Delivery: <strong className="text-slate-700">{prop.deliveryTime}</strong>
+                          </span>
+                          {prop.relevantSkills && (
+                            <span className="flex items-center gap-1">
+                              <Sparkles size={13} className="text-emerald-500" />
+                              Skills: <strong className="text-slate-700">{prop.relevantSkills}</strong>
+                            </span>
+                          )}
+                          {prop.attachmentUrl && (
+                            <a
+                              href={prop.attachmentUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1 text-indigo-600 font-semibold hover:underline"
+                            >
+                              <Paperclip size={13} />
+                              Attachment
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer Actions */}
+                      <div className="mt-6 border-t border-slate-100 pt-4">
+                        {isPaid ? (
+                          <div className="flex items-center justify-between rounded-xl bg-emerald-50 p-3 text-emerald-800 border border-emerald-200">
+                            <span className="flex items-center gap-1.5 text-xs font-bold">
+                              <CheckCircle2 size={16} className="text-emerald-600" />
+                              Paid & Hired
+                            </span>
+                            {prop.transactionId && (
+                              <span className="text-[10px] font-mono font-semibold bg-emerald-100 px-2 py-0.5 rounded">
+                                {prop.transactionId}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setSelectedProposalForPayment(prop);
+                              setShowPaymentModal(true);
+                            }}
+                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-bold text-white shadow-md hover:bg-emerald-700 transition"
+                          >
+                            <CreditCard size={16} />
+                            Pay ${parseFloat(prop.proposedPrice || 0).toFixed(2)} & Hire Student
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: EDIT PROFILE */}
         {activeTab === "edit" && (
           <form onSubmit={handleSaveProfile} className="mt-8 max-w-4xl space-y-8">
             {/* Base Contact Info */}
@@ -617,6 +808,40 @@ const ClientDashboard = () => {
               </button>
             </div>
           </form>
+        )}
+
+        {/* Payment Modal for Proposal Payment */}
+        {selectedProposalForPayment && (
+          <FreelancePaymentModal
+            isOpen={showPaymentModal}
+            onClose={() => {
+              setShowPaymentModal(false);
+              setSelectedProposalForPayment(null);
+            }}
+            activityDetails={{
+              id: selectedProposalForPayment.projectId,
+              proposalId: selectedProposalForPayment.id,
+              title: selectedProposalForPayment.project?.title || "Freelance Project Proposal",
+              amount: selectedProposalForPayment.proposedPrice,
+              freelancerName: selectedProposalForPayment.student?.fullName || "Student Freelancer",
+              category: selectedProposalForPayment.project?.category || "Freelance",
+              type: "proposal",
+            }}
+            onPaymentSuccess={(receipt) => {
+              setReceivedProposals((prev) =>
+                prev.map((p) =>
+                  p.id === selectedProposalForPayment.id
+                    ? {
+                        ...p,
+                        status: "accepted",
+                        paymentStatus: "paid",
+                        transactionId: receipt.transactionId,
+                      }
+                    : p
+                )
+              );
+            }}
+          />
         )}
       </main>
     </div>

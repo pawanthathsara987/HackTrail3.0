@@ -53,6 +53,26 @@ const FreelanceProposal = sequelize.define(
       type: DataTypes.ENUM("pending", "accepted", "rejected"),
       defaultValue: "pending",
     },
+    paymentStatus: {
+      type: DataTypes.ENUM("unpaid", "paid"),
+      defaultValue: "unpaid",
+    },
+    paidAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
+    transactionId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    paymentMethod: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    paidAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     timestamps: true,

@@ -11,7 +11,11 @@ import {
   Paperclip,
   Upload,
   X,
+  CreditCard,
+  CheckCircle2,
+  ShieldCheck,
 } from "lucide-react";
+import FreelancePaymentModal from "../components/FreelancePaymentModal";
 
 const FreelanceProjectDetails = ({ user }) => {
   const { id } = useParams();
@@ -23,6 +27,7 @@ const FreelanceProjectDetails = ({ user }) => {
   const [notFound, setNotFound] = useState(false);
 
   const [showProposal, setShowProposal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
@@ -529,13 +534,29 @@ const FreelanceProjectDetails = ({ user }) => {
             </div>
 
             {/* Proposal / Action Card */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              {alreadySubmitted ? (
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 space-y-4">
+              {project.paymentStatus === "paid" || project.status === "in_progress" ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 text-center">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white mb-2">
+                    <CheckCircle2 size={22} />
+                  </div>
+                  <p className="font-bold text-emerald-900 text-sm">
+                    Activity Paid & Student Hired
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-700">
+                    This freelancing activity is currently in progress.
+                  </p>
+                  {project.transactionId && (
+                    <p className="mt-2 text-[10px] font-mono font-semibold text-emerald-800 bg-emerald-100 py-1 px-2 rounded-md">
+                      Ref: {project.transactionId}
+                    </p>
+                  )}
+                </div>
+              ) : alreadySubmitted ? (
                 <div className="rounded-xl bg-green-50 p-4 text-center">
                   <p className="font-semibold text-green-700">
                     Proposal Already Submitted
                   </p>
-
                   <p className="mt-1 text-sm text-green-600">
                     You have already submitted a proposal for this project.
                   </p>
@@ -545,11 +566,10 @@ const FreelanceProjectDetails = ({ user }) => {
                   <p className="font-bold text-indigo-900 text-sm">
                     Student View Mode
                   </p>
-
                   <p className="mt-1 text-xs text-indigo-700">
                     {project.clientId === user?.id
                       ? "You are the owner of this freelance post."
-                      : "Students offer skills & gigs. Clients and employers can apply or hire."}
+                      : "Students offer skills & gigs. Clients and customers can hire & pay."}
                   </p>
 
                   {project.clientId === user?.id && (
@@ -571,12 +591,28 @@ const FreelanceProjectDetails = ({ user }) => {
                   )}
                 </div>
               ) : (
-                <button
-                  onClick={handleProposalClick}
-                  className="w-full rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white transition hover:bg-emerald-700 shadow-md"
-                >
-                  Hire Student / Submit Proposal
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        navigate("/login");
+                        return;
+                      }
+                      setShowPaymentModal(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 font-bold text-white transition hover:bg-emerald-700 shadow-md hover:shadow-lg"
+                  >
+                    <CreditCard size={18} />
+                    <span>Hire Student & Pay Now ({project.budget})</span>
+                  </button>
+
+                  <button
+                    onClick={handleProposalClick}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Submit Proposal / Custom Offer
+                  </button>
+                </div>
               )}
             </div>
           </aside>
@@ -763,6 +799,28 @@ const FreelanceProjectDetails = ({ user }) => {
             </div>
           </div>
         )}
+
+        {/* Freelance Payment Modal */}
+        <FreelancePaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          activityDetails={{
+            id: project.id,
+            title: project.title,
+            amount: project.budgetMin || project.budget,
+            freelancerName: creator.name,
+            category: project.category,
+            type: "gig",
+          }}
+          onPaymentSuccess={(receipt) => {
+            setProject((prev) => ({
+              ...prev,
+              paymentStatus: "paid",
+              status: "in_progress",
+              transactionId: receipt.transactionId,
+            }));
+          }}
+        />
       </main>
     </div>
   );
