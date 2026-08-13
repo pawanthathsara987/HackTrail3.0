@@ -26,10 +26,13 @@ import {
 
 const JobPosterDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "edit"
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "applicants" | "edit"
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [selectedApplicantJobId, setSelectedApplicantJobId] = useState("all");
+  const [selectedApplicantStatus, setSelectedApplicantStatus] = useState("all");
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
   const [userData, setUserData] = useState(null);
   const [formData, setFormData] = useState({
@@ -256,22 +259,53 @@ const JobPosterDashboard = () => {
 
   const handleDeleteJob = async (jobId) => {
     if (!window.confirm("Are you sure you want to delete this job posting?")) return;
-
-    const token = localStorage.getItem("token");
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`/api/jobs/${jobId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to delete job.");
+      if (response.ok) {
+        setMyJobs((prev) => prev.filter((j) => j.id !== jobId));
+        setMessage({ type: "success", text: "Job deleted successfully." });
       }
-      setMessage({ type: "success", text: "Job posting deleted successfully." });
-      fetchMyJobs();
-    } catch (err) {
-      console.error(err);
-      setMessage({ type: "error", text: err.message });
+    } catch (e) {
+      console.error("Failed to delete job:", e);
+    }
+  };
+
+  const handleUpdateApplicantStatus = async (applicationId, status) => {
+    setUpdatingStatusId(applicationId);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/jobs/applications/${applicationId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update status");
+      }
+
+      setMyJobs((prevJobs) =>
+        prevJobs.map((job) => ({
+          ...job,
+          applications: (job.applications || []).map((app) =>
+            app.id === applicationId ? { ...app, status } : app
+          ),
+        }))
+      );
+      setMessage({ type: "success", text: `Candidate status updated to ${status}.` });
+    } catch (e) {
+      console.error("Failed to update status:", e);
+      setMessage({ type: "error", text: e.message || "Failed to update status." });
+    } finally {
+      setUpdatingStatusId(null);
     }
   };
 
@@ -445,7 +479,7 @@ const JobPosterDashboard = () => {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={() => setActiveTab("overview")}
                 className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
@@ -455,6 +489,19 @@ const JobPosterDashboard = () => {
                 }`}
               >
                 Overview
+              </button>
+              <button
+                onClick={() => setActiveTab("applicants")}
+                className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeTab === "applicants"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "bg-white/10 text-slate-200 hover:bg-white/15"
+                }`}
+              >
+                <Users size={16} className="text-indigo-300" />
+                Job Applicants (
+                {myJobs.reduce((acc, j) => acc + (j.applications?.length || 0), 0)}
+                )
               </button>
               <button
                 onClick={() => setActiveTab("edit")}
@@ -601,6 +648,9 @@ const JobPosterDashboard = () => {
                             >
                               {j.status}
                             </span>
+                            <span className="rounded-full bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 text-xs font-bold text-indigo-700">
+                              {j.applications?.length || 0} Applicants
+                            </span>
                           </div>
                           <div className="flex flex-wrap gap-3 text-xs text-slate-500">
                             <span className="flex items-center gap-1">
@@ -621,6 +671,16 @@ const JobPosterDashboard = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedApplicantJobId(String(j.id));
+                              setActiveTab("applicants");
+                            }}
+                            className="flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition"
+                          >
+                            <Users size={14} />
+                            Applicants ({j.applications?.length || 0})
+                          </button>
                           <Link
                             to={`/part-time-jobs/${j.id}`}
                             className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
@@ -693,7 +753,230 @@ const JobPosterDashboard = () => {
           </div>
         )}
 
-        {/* TAB 2: EDIT PROFILE */}
+        {/* TAB 2: APPLICANTS */}
+        {activeTab === "applicants" && (
+          <div className="mt-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <Users size={22} className="text-indigo-600" />
+                  Job Applicants & Candidates
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Review student profiles, cover letters, and manage application statuses.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <select
+                  value={selectedApplicantJobId}
+                  onChange={(e) => setSelectedApplicantJobId(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="all">All Jobs ({myJobs.length})</option>
+                  {myJobs.map((j) => (
+                    <option key={j.id} value={String(j.id)}>
+                      {j.title} ({j.applications?.length || 0})
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedApplicantStatus}
+                  onChange={(e) => setSelectedApplicantStatus(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="reviewed">Reviewed</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+
+            {(() => {
+              const allApplications = myJobs.flatMap((j) =>
+                (j.applications || []).map((app) => ({
+                  ...app,
+                  jobTitle: j.title,
+                  jobId: j.id,
+                  jobLocation: j.location,
+                  jobSalary: j.salary,
+                }))
+              );
+
+              const filteredApplications = allApplications.filter((app) => {
+                const matchJob =
+                  selectedApplicantJobId === "all" ||
+                  String(app.jobId) === selectedApplicantJobId;
+                const matchStatus =
+                  selectedApplicantStatus === "all" ||
+                  app.status === selectedApplicantStatus;
+                return matchJob && matchStatus;
+              });
+
+              if (filteredApplications.length === 0) {
+                return (
+                  <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                    <Users size={48} className="mx-auto text-slate-300" />
+                    <h3 className="mt-4 text-lg font-bold text-slate-800">
+                      No Applicants Found
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">
+                      {selectedApplicantJobId !== "all" || selectedApplicantStatus !== "all"
+                        ? "No student applications match the selected job or status filter."
+                        : "Students haven't applied for your posted jobs yet. Check back soon!"}
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-4">
+                  {filteredApplications.map((app) => {
+                    const applicant = app.applicant || {};
+                    const profile = applicant.studentProfile || {};
+                    const statusColor =
+                      app.status === "accepted"
+                        ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                        : app.status === "rejected"
+                        ? "bg-red-100 text-red-700 border-red-200"
+                        : app.status === "reviewed"
+                        ? "bg-blue-100 text-blue-700 border-blue-200"
+                        : "bg-amber-100 text-amber-800 border-amber-200";
+
+                    return (
+                      <div
+                        key={app.id}
+                        className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition space-y-5"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+                          <div className="flex items-center gap-4">
+                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-indigo-50 border border-slate-200 flex items-center justify-center text-xl font-bold text-indigo-600">
+                              {applicant.profilePhoto ? (
+                                <img
+                                  src={applicant.profilePhoto}
+                                  alt={applicant.fullName}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                applicant.fullName?.charAt(0) || "S"
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-base font-bold text-slate-900">
+                                  {applicant.fullName || "Student Candidate"}
+                                </h3>
+                                <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold capitalize ${statusColor}`}>
+                                  {app.status || "Pending"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                Applied for: <span className="font-semibold text-slate-700">{app.jobTitle}</span> • {new Date(app.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => handleUpdateApplicantStatus(app.id, "accepted")}
+                              disabled={updatingStatusId === app.id || app.status === "accepted"}
+                              className="rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow hover:bg-emerald-700 disabled:opacity-40 transition"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleUpdateApplicantStatus(app.id, "reviewed")}
+                              disabled={updatingStatusId === app.id || app.status === "reviewed"}
+                              className="rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow hover:bg-blue-700 disabled:opacity-40 transition"
+                            >
+                              Review
+                            </button>
+                            <button
+                              onClick={() => handleUpdateApplicantStatus(app.id, "rejected")}
+                              disabled={updatingStatusId === app.id || app.status === "rejected"}
+                              className="rounded-xl bg-red-600 px-3.5 py-1.5 text-xs font-bold text-white shadow hover:bg-red-700 disabled:opacity-40 transition"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Student Academic & Contact Info */}
+                        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 text-xs text-slate-600">
+                          <div>
+                            <span className="text-slate-400 block font-medium">Contact:</span>
+                            <p className="font-semibold text-slate-800 mt-0.5">{applicant.email || "N/A"}</p>
+                            <p className="text-slate-500">{applicant.phone || "No phone provided"}</p>
+                          </div>
+
+                          <div>
+                            <span className="text-slate-400 block font-medium">Education:</span>
+                            <p className="font-semibold text-slate-800 mt-0.5">
+                              {profile.institutionName || "Not specified"}
+                            </p>
+                            <p className="text-slate-500">
+                              {profile.fieldOfStudy ? `${profile.fieldOfStudy} (${profile.educationLevel || "Student"})` : profile.educationLevel || "Student"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <span className="text-slate-400 block font-medium">Location & Experience:</span>
+                            <p className="font-semibold text-slate-800 mt-0.5">{applicant.location || "Location not set"}</p>
+                            <p className="text-slate-500">{profile.experienceLevel ? `${profile.experienceLevel} Level` : "Student"}</p>
+                          </div>
+                        </div>
+
+                        {/* Skills */}
+                        {Array.isArray(profile.skills) && profile.skills.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                            <span className="text-xs font-semibold text-slate-400 mr-1">Skills:</span>
+                            {profile.skills.map((skill, idx) => (
+                              <span key={idx} className="rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Cover Letter & Resume */}
+                        {(app.coverLetter || app.resumeUrl) && (
+                          <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 text-xs space-y-2">
+                            {app.coverLetter && (
+                              <div>
+                                <span className="font-bold text-slate-700 block mb-1">Cover Letter / Note:</span>
+                                <p className="italic text-slate-600 leading-relaxed">"{app.coverLetter}"</p>
+                              </div>
+                            )}
+
+                            {app.resumeUrl && (
+                              <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                                <span className="font-bold text-slate-700">Resume / Portfolio:</span>
+                                <a
+                                  href={app.resumeUrl.startsWith("http") ? app.resumeUrl : `https://${app.resumeUrl}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 font-bold text-indigo-600 hover:underline"
+                                >
+                                  <Eye size={13} />
+                                  View Resume
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* TAB 3: EDIT PROFILE */}
         {activeTab === "edit" && (
           <form onSubmit={handleSaveProfile} className="mt-8 max-w-4xl space-y-8">
             {/* Organization Info */}
