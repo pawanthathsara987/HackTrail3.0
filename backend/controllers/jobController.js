@@ -306,3 +306,27 @@ export const deleteJob = async (req, res) => {
   }
 };
 
+// @desc    Get applied/enrolled part-time jobs for logged-in student
+// @route   GET /api/jobs/my-applications
+// @access  Private (Student)
+export const getMyApplications = async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const applications = await JobApplication.findAll({
+      where: { studentId },
+      include: [
+        {
+          model: Job,
+          as: "job",
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({ applications });
+  } catch (error) {
+    console.error("Error fetching student job applications:", error);
+    return res.status(500).json({ message: error.message || "Server error fetching applications." });
+  }
+};
+

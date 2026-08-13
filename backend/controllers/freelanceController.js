@@ -365,3 +365,27 @@ export const deleteProject = async (req, res) => {
     return res.status(500).json({ message: error.message || "Server error deleting post." });
   }
 };
+
+// @desc    Get freelance proposals submitted by logged-in student
+// @route   GET /api/freelance-projects/my-proposals
+// @access  Private (Student)
+export const getMyProposals = async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const proposals = await FreelanceProposal.findAll({
+      where: { studentId },
+      include: [
+        {
+          model: FreelanceProject,
+          as: "project",
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({ proposals });
+  } catch (error) {
+    console.error("Error fetching student proposals:", error);
+    return res.status(500).json({ message: error.message || "Server error fetching proposals." });
+  }
+};

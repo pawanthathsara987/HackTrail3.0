@@ -7,6 +7,7 @@ import {
   submitProposal,
   updateProject,
   deleteProject,
+  getMyProposals,
 } from "../controllers/freelanceController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -28,6 +29,7 @@ const optionalAuth = (req, res, next) => {
 };
 
 router.get("/", getProjects);
+router.get("/my-proposals", protect, getMyProposals);
 router.get("/:id", optionalAuth, getProjectById);
 router.post("/", protect, createProject);
 router.put("/:id", protect, updateProject);

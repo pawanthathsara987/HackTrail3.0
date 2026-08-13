@@ -297,3 +297,31 @@ export const enrollProgram = async (req, res) => {
       .json({ message: error.message || "Server error enrolling in program." });
   }
 };
+
+// @desc    Get enrolled training programs for logged in student
+// @route   GET /api/training/my-enrollments
+// @access  Private (Student)
+export const getMyEnrollments = async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const enrollments = await TrainingEnrollment.findAll({
+      where: { studentId },
+      include: [
+        {
+          model: TrainingProgram,
+          as: "program",
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({
+      enrollments,
+    });
+  } catch (error) {
+    console.error("Error fetching student enrollments:", error);
+    return res
+      .status(500)
+      .json({ message: error.message || "Server error fetching enrollments." });
+  }
+};
