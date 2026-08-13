@@ -18,6 +18,7 @@ import TrainingDetails from './pages/TrainingDetails';
 import StudentDashboard from './pages/dashboards/StudentDashboard';
 import JobPosterDashboard from './pages/dashboards/JobPosterDashboard';
 import ClientDashboard from './pages/dashboards/ClientDashboard';
+import TrainingProviderDashboard from './pages/dashboards/TrainingProviderDashboard';
 
 const getUser = () => {
   try {
@@ -31,6 +32,7 @@ const getUser = () => {
 const getRoleDashboard = (role) => {
   if (role === "job_poster") return "/job-poster/dashboard";
   if (role === "client") return "/client/dashboard";
+  if (role === "training_provider") return "/training-provider/dashboard";
   return "/student/dashboard";
 };
 
@@ -123,6 +125,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["client"]}>
                   <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/training-provider/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["training_provider"]}>
+                  <TrainingProviderDashboard />
                 </ProtectedRoute>
               }
             />

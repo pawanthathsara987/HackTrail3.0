@@ -69,8 +69,11 @@ const Login = () => {
       case "client":
         return "/client/dashboard";
 
+      case "training_provider":
+        return "/training-provider/dashboard";
+
       default:
-        return "/unauthorized";
+        return "/student/dashboard";
     }
   };
 

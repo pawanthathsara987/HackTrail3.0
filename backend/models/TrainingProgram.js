@@ -17,6 +17,10 @@ const TrainingProgram = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    providerId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     providerLogo: {
       type: DataTypes.STRING,
       allowNull: true,

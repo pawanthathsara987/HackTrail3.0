@@ -23,6 +23,9 @@ export const getPrograms = async (req, res) => {
     const offset = (pageNum - 1) * limitNum;
 
     const whereClause = {};
+    if (req.query.providerId) {
+      whereClause.providerId = req.query.providerId;
+    }
 
     if (search && search.trim()) {
       const query = `%${search.trim()}%`;
@@ -164,6 +167,7 @@ export const createProgram = async (req, res) => {
     const program = await TrainingProgram.create({
       title,
       provider: typeof provider === "object" ? JSON.stringify(provider) : provider,
+      providerId: req.user ? req.user.id : null,
       providerLogo: providerLogo || null,
       category,
       skillLevel: skillLevel || "Beginner",
@@ -191,6 +195,62 @@ export const createProgram = async (req, res) => {
     return res
       .status(500)
       .json({ message: error.message || "Server error creating training program." });
+  }
+};
+
+// @desc    Update a training program
+// @route   PUT /api/training/:id
+// @access  Private (Owner / Instructor)
+export const updateProgram = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const program = await TrainingProgram.findByPk(id);
+
+    if (!program) {
+      return res.status(404).json({ message: "Training program not found." });
+    }
+
+    if (req.user && program.providerId && program.providerId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to update this program." });
+    }
+
+    await program.update(req.body);
+
+    return res.status(200).json({
+      message: "Training program updated successfully.",
+      program,
+    });
+  } catch (error) {
+    console.error("Error updating training program:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete a training program
+// @route   DELETE /api/training/:id
+// @access  Private (Owner / Instructor)
+export const deleteProgram = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const program = await TrainingProgram.findByPk(id);
+
+    if (!program) {
+      return res.status(404).json({ message: "Training program not found." });
+    }
+
+    if (req.user && program.providerId && program.providerId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this program." });
+    }
+
+    await program.destroy();
+
+    return res.status(200).json({
+      message: "Training program deleted successfully.",
+      id,
+    });
+  } catch (error) {
+    console.error("Error deleting training program:", error);
+    return res.status(500).json({ message: error.message });
   }
 };
 

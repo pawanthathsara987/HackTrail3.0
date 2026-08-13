@@ -2,6 +2,7 @@ import User from "./User.js";
 import Student from "./Student.js";
 import JobPoster from "./JobPoster.js";
 import Client from "./Client.js";
+import TrainingProvider from "./TrainingProvider.js";
 import Job from "./Job.js";
 import JobApplication from "./JobApplication.js";
 import JobBookmark from "./JobBookmark.js";
@@ -44,6 +45,28 @@ User.hasOne(Client, {
 Client.belongsTo(User, {
   foreignKey: "userId",
   as: "user",
+});
+
+// User <-> TrainingProvider (1:1)
+User.hasOne(TrainingProvider, {
+  foreignKey: "userId",
+  as: "trainingProviderProfile",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+TrainingProvider.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+// User (TrainingProvider) <-> TrainingProgram (1:N)
+User.hasMany(TrainingProgram, {
+  foreignKey: "providerId",
+  as: "postedTrainingPrograms",
+});
+TrainingProgram.belongsTo(User, {
+  foreignKey: "providerId",
+  as: "providerUser",
 });
 
 // User (JobPoster) <-> Job (1:N)
@@ -143,6 +166,7 @@ export {
   Student,
   JobPoster,
   Client,
+  TrainingProvider,
   Job,
   JobApplication,
   JobBookmark,
