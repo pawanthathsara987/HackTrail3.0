@@ -582,16 +582,30 @@ const PartTimeJobDetails = () => {
 
                             </div>
 
-                            <h1 className="mt-5 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                                {job.title}
-                            </h1>
+                            <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                                        {job.title}
+                                    </h1>
 
-                            <div className="mt-4 flex items-center gap-2 text-slate-600">
-                                <Building2 size={18} />
+                                    <div className="mt-3 flex items-center gap-2 text-slate-600">
+                                        <Building2 size={18} />
 
-                                <span className="font-medium">
-                                    {companyName}
-                                </span>
+                                        <span className="font-medium">
+                                            {companyName}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {(job.image || job.companyLogo) && (
+                                    <div className="h-16 w-24 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
+                                        <img
+                                            src={job.image || job.companyLogo}
+                                            alt={job.title}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Quick Information */}

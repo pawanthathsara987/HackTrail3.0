@@ -48,6 +48,7 @@ const JobPosterDashboard = () => {
   const [myJobs, setMyJobs] = useState([]);
   const [showJobModal, setShowJobModal] = useState(false);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
+  const [uploadingJobImage, setUploadingJobImage] = useState(false);
   const [jobModalData, setJobModalData] = useState({
     title: "",
     category: "Web Development",
@@ -62,6 +63,7 @@ const JobPosterDashboard = () => {
     responsibilities: "",
     benefits: "",
     deadline: "",
+    image: "",
   });
 
   useEffect(() => {
@@ -131,6 +133,45 @@ const JobPosterDashboard = () => {
     }
   };
 
+  const handleJobImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingJobImage(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/upload/job-image", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to upload job image.");
+      }
+
+      setJobModalData((prev) => ({ ...prev, image: data.imageUrl }));
+    } catch (err) {
+      console.error("Job image upload error:", err);
+      // Fallback to Base64 preview if server request fails
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setJobModalData((prev) => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploadingJobImage(false);
+    }
+  };
+
   const handleCreateJob = async (e) => {
     e.preventDefault();
     setIsCreatingJob(true);
@@ -145,7 +186,8 @@ const JobPosterDashboard = () => {
     const payload = {
       title: jobModalData.title,
       companyName: organizationName,
-      companyLogo: userData?.profilePhoto || null,
+      companyLogo: jobModalData.image || userData?.profilePhoto || null,
+      image: jobModalData.image || null,
       category: jobModalData.category,
       location: jobModalData.location,
       jobType: jobModalData.jobType,
@@ -201,6 +243,7 @@ const JobPosterDashboard = () => {
         responsibilities: "",
         benefits: "",
         deadline: "",
+        image: "",
       });
       fetchMyJobs();
     } catch (err) {
@@ -885,6 +928,65 @@ const JobPosterDashboard = () => {
                       onChange={(e) => setJobModalData({ ...jobModalData, title: e.target.value })}
                       className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
                     />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Job Image / Banner (Optional)
+                    </label>
+                    <div className="mt-2">
+                      {jobModalData.image ? (
+                        <div className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                          <img
+                            src={jobModalData.image}
+                            alt="Job Image Preview"
+                            className="h-20 w-32 rounded-xl object-cover border border-slate-200"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-slate-800 truncate">
+                              Image attached
+                            </p>
+                            <p className="text-[11px] text-slate-500">
+                              Uploaded to 'job-post' Supabase bucket
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setJobModalData({ ...jobModalData, image: "" })}
+                            className="rounded-full bg-slate-200 p-2 text-slate-600 hover:bg-red-100 hover:text-red-600 transition"
+                            title="Remove image"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center cursor-pointer rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center transition hover:bg-slate-100/80">
+                          {uploadingJobImage ? (
+                            <div className="flex items-center gap-2 text-indigo-600 font-semibold text-xs py-2">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                              Uploading image to Supabase 'job-post' bucket...
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="mb-2 text-indigo-600" size={24} />
+                              <p className="text-xs font-semibold text-slate-700">
+                                Click to upload job image or company banner
+                              </p>
+                              <p className="mt-0.5 text-[10px] text-slate-400">
+                                Supports PNG, JPG, WEBP up to 5MB
+                              </p>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={uploadingJobImage}
+                            onChange={handleJobImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
                   </div>
 
                   <div>
