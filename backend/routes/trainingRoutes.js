@@ -4,6 +4,7 @@ import {
   getProgramById,
   createProgram,
   enrollProgram,
+  getMyEnrollments,
 } from "../controllers/trainingController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -20,6 +21,7 @@ const optionalAuth = (req, res, next) => {
 };
 
 router.get("/", getPrograms);
+router.get("/my-enrollments", protect, getMyEnrollments);
 router.get("/:id", optionalAuth, getProgramById);
 router.post("/", protect, createProgram);
 router.post("/:id/enroll", protect, enrollProgram);

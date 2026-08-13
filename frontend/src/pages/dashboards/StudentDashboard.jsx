@@ -27,13 +27,15 @@ import {
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "gigs" | "edit"
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "courses" | "gigs" | "edit"
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const [userData, setUserData] = useState(null);
   const [myGigs, setMyGigs] = useState([]);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -55,6 +57,7 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchEnrolledCourses();
   }, []);
 
   const fetchProfile = async () => {
@@ -118,6 +121,26 @@ const StudentDashboard = () => {
       }
     } catch (e) {
       console.error("Failed to fetch my gigs:", e);
+    }
+  };
+
+  const fetchEnrolledCourses = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setLoadingCourses(true);
+    try {
+      const response = await fetch("/api/training/my-enrollments", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEnrolledCourses(data.enrollments || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch enrolled courses:", e);
+    } finally {
+      setLoadingCourses(false);
     }
   };
 
@@ -336,6 +359,18 @@ const StudentDashboard = () => {
               </button>
 
               <button
+                onClick={() => setActiveTab("courses")}
+                className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeTab === "courses"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-white/10 text-slate-200 hover:bg-white/15"
+                }`}
+              >
+                <BookOpen size={16} className="text-blue-300" />
+                Enrolled Courses ({enrolledCourses.length})
+              </button>
+
+              <button
                 onClick={() => setActiveTab("gigs")}
                 className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                   activeTab === "gigs"
@@ -463,6 +498,110 @@ const StudentDashboard = () => {
                 </div>
               </div>
 
+              {/* Enrolled Training Courses */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <BookOpen className="text-blue-600" size={20} />
+                    Enrolled Courses & Programs
+                    {enrolledCourses.length > 0 && (
+                      <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700">
+                        {enrolledCourses.length}
+                      </span>
+                    )}
+                  </h3>
+                  <Link
+                    to="/training"
+                    className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    Browse Catalog
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+
+                {loadingCourses ? (
+                  <div className="py-8 text-center text-sm text-slate-500">
+                    Loading your enrolled courses...
+                  </div>
+                ) : enrolledCourses.length === 0 ? (
+                  <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center border border-dashed border-slate-200">
+                    <BookOpen size={36} className="mx-auto text-slate-400" />
+                    <h4 className="mt-3 font-bold text-slate-800">No Enrolled Courses Yet</h4>
+                    <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                      Boost your skills and career opportunities by enrolling in top-rated training programs.
+                    </p>
+                    <Link
+                      to="/training"
+                      className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 transition"
+                    >
+                      <Sparkles size={14} />
+                      Explore Training Courses
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-4">
+                    {enrolledCourses.slice(0, 3).map((item) => {
+                      const program = item.program || {};
+                      const providerName =
+                        typeof program.provider === "string"
+                          ? (program.provider.startsWith("{") ? JSON.parse(program.provider)?.name || program.provider : program.provider)
+                          : program.provider?.name || "Training Provider";
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-white hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-12 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-200 border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-xs">
+                              {program.image || program.providerLogo ? (
+                                <img
+                                  src={program.image || program.providerLogo}
+                                  alt={program.title}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <BookOpen size={20} className="text-blue-600" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-slate-900 text-sm truncate">
+                                {program.title || "Training Program"}
+                              </h4>
+                              <p className="text-xs text-slate-500 truncate">
+                                {providerName} • {program.duration || "Self-Paced"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 capitalize">
+                              {item.status || "Enrolled"}
+                            </span>
+                            <Link
+                              to={`/training/${program.id || item.trainingId}`}
+                              className="flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition"
+                            >
+                              <Eye size={14} />
+                              View Course
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {enrolledCourses.length > 3 && (
+                      <button
+                        onClick={() => setActiveTab("courses")}
+                        className="w-full text-center py-2 text-xs font-semibold text-blue-600 hover:underline"
+                      >
+                        View All Enrolled Courses ({enrolledCourses.length}) →
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Goals & Interests */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">
@@ -586,6 +725,125 @@ const StudentDashboard = () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB: MY ENROLLED COURSES */}
+        {activeTab === "courses" && (
+          <div className="mt-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <BookOpen size={22} className="text-blue-600" />
+                  My Enrolled Courses & Training Programs
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Track your learning progress, access course materials, and manage your enrolled programs.
+                </p>
+              </div>
+
+              <Link
+                to="/training"
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-bold text-white shadow-md hover:bg-blue-700 transition"
+              >
+                <Sparkles size={18} />
+                Explore More Programs
+              </Link>
+            </div>
+
+            {loadingCourses ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm text-slate-500">
+                Loading your enrolled courses...
+              </div>
+            ) : enrolledCourses.length === 0 ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                <BookOpen size={48} className="mx-auto text-slate-300" />
+                <h3 className="mt-4 text-lg font-bold text-slate-800">
+                  No Enrolled Courses Found
+                </h3>
+                <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">
+                  You haven't enrolled in any training programs yet. Explore our training catalog to enhance your skills and gain certifications!
+                </p>
+
+                <Link
+                  to="/training"
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-lg hover:bg-blue-700 transition"
+                >
+                  <Sparkles size={18} />
+                  Browse Training Catalog
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {enrolledCourses.map((item) => {
+                  const program = item.program || {};
+                  const providerName =
+                    typeof program.provider === "string"
+                      ? (program.provider.startsWith("{") ? JSON.parse(program.provider)?.name || program.provider : program.provider)
+                      : program.provider?.name || "Training Provider";
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition"
+                    >
+                      <div>
+                        <div className="relative h-40 w-full overflow-hidden rounded-2xl bg-slate-100 border border-slate-200">
+                          {program.image || program.providerLogo ? (
+                            <img
+                              src={program.image || program.providerLogo}
+                              alt={program.title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-blue-50 text-blue-600">
+                              <BookOpen size={40} />
+                            </div>
+                          )}
+                          <span className="absolute top-3 right-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white shadow-sm capitalize">
+                            {item.status || "Enrolled"}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          <div className="flex items-center justify-between text-xs font-semibold text-blue-600">
+                            <span>{program.category || "General"}</span>
+                            <span>{program.skillLevel || "All Levels"}</span>
+                          </div>
+
+                          <h3 className="text-lg font-bold text-slate-900 line-clamp-2">
+                            {program.title || "Training Course"}
+                          </h3>
+
+                          <p className="text-xs text-slate-500">
+                            By <span className="font-semibold text-slate-700">{providerName}</span>
+                          </p>
+
+                          <p className="text-xs text-slate-500 line-clamp-2 mt-2">
+                            {program.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 border-t border-slate-100 pt-4 flex items-center justify-between">
+                        <span className="text-xs text-slate-500 flex items-center gap-1">
+                          <Clock size={14} className="text-slate-400" />
+                          {program.duration || "Self-Paced"}
+                        </span>
+
+                        <Link
+                          to={`/training/${program.id || item.trainingId}`}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-blue-700 transition"
+                        >
+                          <Eye size={14} />
+                          Continue Course
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
