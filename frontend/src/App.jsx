@@ -109,6 +109,14 @@ function App() {
               }
             />
             <Route
+              path="/student/applications"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <Navigate to="/student/dashboard" state={{ activeTab: "jobs" }} replace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/job-poster/dashboard"
               element={
                 <ProtectedRoute allowedRoles={["job_poster"]}>

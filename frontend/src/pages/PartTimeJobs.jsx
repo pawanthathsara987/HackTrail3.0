@@ -521,20 +521,13 @@ const PartTimeJobs = () => {
     // Apply
     // -------------------------------------------------------
 
-    const handleApply = (jobId) => {
-        /*
-          Reuse existing authentication.
-    
-          If no authenticated user:
-              /login
-    
-          If Student:
-              continue to existing student application process.
-    
-          If Job Poster / Client:
-              do not allow student application.
-        */
+    const [applyModalJob, setApplyModalJob] = useState(null);
+    const [coverLetterInput, setCoverLetterInput] = useState("");
+    const [resumeUrlInput, setResumeUrlInput] = useState("");
+    const [submittingApplication, setSubmittingApplication] = useState(false);
+    const [applicationFeedback, setApplicationFeedback] = useState({ type: "", text: "" });
 
+    const handleApply = (targetJob) => {
         if (!user) {
             navigate("/login");
             return;
@@ -547,24 +540,6 @@ const PartTimeJobs = () => {
             ""
         ).toUpperCase();
 
-        if (role === "STUDENT") {
-            /*
-              Existing OpportunityHub specification contains:
-              /student/applications
-      
-              We pass the selected job ID through router state.
-            */
-
-            navigate("/student/applications", {
-                state: {
-                    jobId,
-                    opportunityType: "PART_TIME_JOB",
-                },
-            });
-
-            return;
-        }
-
         if (
             role === "JOB_POSTER" ||
             role === "EMPLOYER" ||
@@ -573,13 +548,64 @@ const PartTimeJobs = () => {
             window.alert(
                 "Job Posters and Clients cannot apply for jobs as students."
             );
-
             return;
         }
 
-        window.alert(
-            "Only students can apply for part-time jobs."
-        );
+        if (role !== "STUDENT") {
+            window.alert(
+                "Only students can apply for part-time jobs."
+            );
+            return;
+        }
+
+        const selectedJob = typeof targetJob === "object" ? targetJob : jobs.find((j) => j.id === targetJob);
+        setApplyModalJob(selectedJob || { id: targetJob, title: "Part-Time Job" });
+        setCoverLetterInput("");
+        setResumeUrlInput("");
+        setApplicationFeedback({ type: "", text: "" });
+    };
+
+    const handleSubmitJobApplication = async (e) => {
+        e.preventDefault();
+        if (!applyModalJob) return;
+
+        setSubmittingApplication(true);
+        setApplicationFeedback({ type: "", text: "" });
+
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${API_BASE_URL}/api/jobs/${applyModalJob.id}/apply`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    coverLetter: coverLetterInput || null,
+                    resumeUrl: resumeUrlInput || null,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to submit application.");
+            }
+
+            setApplicationFeedback({
+                type: "success",
+                text: "Application submitted successfully!",
+            });
+        } catch (err) {
+            console.error("Application error:", err);
+            const isAlready = err.message?.toLowerCase().includes("already applied");
+            setApplicationFeedback({
+                type: isAlready ? "info" : "error",
+                text: isAlready ? "You have already applied for this job." : (err.message || "Unable to submit application."),
+            });
+        } finally {
+            setSubmittingApplication(false);
+        }
     };
 
 
@@ -1013,7 +1039,7 @@ const PartTimeJobs = () => {
                                                 handleViewDetails(job.id)
                                             }
                                             onApply={() =>
-                                                handleApply(job.id)
+                                                handleApply(job)
                                             }
                                         />
                                     ))}
@@ -1106,6 +1132,123 @@ const PartTimeJobs = () => {
                         >
                             Show Results
                         </button>
+                    </div>
+                </div>
+            )}
+
+
+            {/* JOB APPLICATION MODAL */}
+            {applyModalJob && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-4 backdrop-blur-sm">
+                    <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                                    <BriefcaseBusiness size={22} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900">Apply for Position</h3>
+                                    <p className="text-xs text-slate-500 line-clamp-1">{applyModalJob.title} at {applyModalJob.companyName || applyModalJob.company || "Employer"}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setApplyModalJob(null)}
+                                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {applicationFeedback.text ? (
+                            <div className="mt-6 space-y-5 text-center py-4">
+                                <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${
+                                    applicationFeedback.type === "success" ? "bg-emerald-100 text-emerald-600" : applicationFeedback.type === "info" ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
+                                }`}>
+                                    {applicationFeedback.type === "success" ? <CheckCircle2 size={36} /> : <AlertCircle size={36} />}
+                                </div>
+
+                                <div>
+                                    <h4 className="text-lg font-bold text-slate-900">
+                                        {applicationFeedback.type === "success" ? "Application Submitted!" : applicationFeedback.type === "info" ? "Already Applied" : "Application Failed"}
+                                    </h4>
+                                    <p className="mt-2 text-sm text-slate-600">
+                                        {applicationFeedback.text}
+                                    </p>
+                                </div>
+
+                                <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setApplyModalJob(null)}
+                                        className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                                    >
+                                        Close
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setApplyModalJob(null);
+                                            navigate("/student/dashboard", { state: { activeTab: "jobs" } });
+                                        }}
+                                        className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow hover:bg-indigo-700 transition"
+                                    >
+                                        View Applied Jobs
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmitJobApplication} className="mt-6 space-y-5">
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                        Cover Letter (Optional)
+                                    </label>
+                                    <textarea
+                                        rows={4}
+                                        placeholder="Introduce yourself, highlight relevant skills or availability..."
+                                        value={coverLetterInput}
+                                        onChange={(e) => setCoverLetterInput(e.target.value)}
+                                        className="mt-2 w-full rounded-xl border border-slate-200 p-4 text-sm focus:border-indigo-500 focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                        Resume Link / Portfolio URL (Optional)
+                                    </label>
+                                    <input
+                                        type="url"
+                                        placeholder="e.g. https://drive.google.com/your-resume or portfolio link"
+                                        value={resumeUrlInput}
+                                        onChange={(e) => setResumeUrlInput(e.target.value)}
+                                        className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setApplyModalJob(null)}
+                                        className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={submittingApplication}
+                                        className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-indigo-700 disabled:opacity-50 transition"
+                                    >
+                                        {submittingApplication ? (
+                                            <>
+                                                <Loader2 size={16} className="animate-spin" />
+                                                Submitting...
+                                            </>
+                                        ) : (
+                                            "Submit Application"
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}
