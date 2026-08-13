@@ -1281,12 +1281,12 @@ const StudentDashboard = () => {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {myProposals.map((item) => {
                     const project = item.project || {};
-                    const statusColor =
-                      item.status === "accepted"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : item.status === "rejected"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-amber-100 text-amber-800";
+                    const isPaid = item.paymentStatus === "paid" || item.status === "accepted";
+                    const statusColor = isPaid
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      : item.status === "rejected"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-amber-100 text-amber-800";
 
                     return (
                       <div
@@ -1296,10 +1296,10 @@ const StudentDashboard = () => {
                         <div>
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-blue-600">
-                              Proposed: Rs. {Number(item.proposedPrice).toLocaleString()}
+                              Proposed: ${Number(item.proposedPrice).toFixed(2)}
                             </span>
                             <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${statusColor}`}>
-                              {item.status || "Pending"}
+                              {isPaid ? "Paid & Hired" : item.status || "Pending"}
                             </span>
                           </div>
 

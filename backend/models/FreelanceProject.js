@@ -96,6 +96,30 @@ const FreelanceProject = sequelize.define(
       type: DataTypes.ENUM("open", "in_progress", "completed", "closed"),
       defaultValue: "open",
     },
+    hiredStudentId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    paymentStatus: {
+      type: DataTypes.ENUM("unpaid", "paid"),
+      defaultValue: "unpaid",
+    },
+    paidAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
+    transactionId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    paymentMethod: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    paidAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     timestamps: true,

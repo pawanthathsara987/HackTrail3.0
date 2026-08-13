@@ -11,7 +11,11 @@ import {
   Paperclip,
   Upload,
   X,
+  CreditCard,
+  CheckCircle2,
+  ShieldCheck,
 } from "lucide-react";
+import FreelancePaymentModal from "../components/FreelancePaymentModal";
 
 const FreelanceProjectDetails = ({ user }) => {
   const { id } = useParams();
@@ -23,6 +27,7 @@ const FreelanceProjectDetails = ({ user }) => {
   const [notFound, setNotFound] = useState(false);
 
   const [showProposal, setShowProposal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDirectBuyModal, setShowDirectBuyModal] = useState(false);
   const [buyInstructions, setBuyInstructions] = useState("");
   const [priceOption, setPriceOption] = useState("agree"); // "agree" | "custom"
@@ -630,13 +635,29 @@ const FreelanceProjectDetails = ({ user }) => {
             </div>
 
             {/* Proposal / Action Card */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              {alreadySubmitted ? (
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 space-y-4">
+              {project.paymentStatus === "paid" || project.status === "in_progress" ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 text-center">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white mb-2">
+                    <CheckCircle2 size={22} />
+                  </div>
+                  <p className="font-bold text-emerald-900 text-sm">
+                    Activity Paid & Student Hired
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-700">
+                    This freelancing activity is currently in progress.
+                  </p>
+                  {project.transactionId && (
+                    <p className="mt-2 text-[10px] font-mono font-semibold text-emerald-800 bg-emerald-100 py-1 px-2 rounded-md">
+                      Ref: {project.transactionId}
+                    </p>
+                  )}
+                </div>
+              ) : alreadySubmitted ? (
                 <div className="rounded-xl bg-green-50 p-4 text-center">
                   <p className="font-semibold text-green-700">
                     Proposal Already Submitted
                   </p>
-
                   <p className="mt-1 text-sm text-green-600">
                     You have already submitted a proposal for this project.
                   </p>
@@ -646,11 +667,10 @@ const FreelanceProjectDetails = ({ user }) => {
                   <p className="font-bold text-indigo-900 text-sm">
                     Student View Mode
                   </p>
-
                   <p className="mt-1 text-xs text-indigo-700">
                     {project.clientId === user?.id
                       ? "You are the owner of this freelance post."
-                      : "Students offer skills & gigs. Clients and employers can apply or hire."}
+                      : "Students offer skills & gigs. Clients and customers can hire & pay."}
                   </p>
 
                   {user?.role === "student" && project.clientId === user?.id && (
@@ -884,6 +904,28 @@ const FreelanceProjectDetails = ({ user }) => {
             </div>
           </div>
         )}
+
+        {/* Freelance Payment Modal */}
+        <FreelancePaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          activityDetails={{
+            id: project.id,
+            title: project.title,
+            amount: project.budgetMin || project.budget,
+            freelancerName: creator.name,
+            category: project.category,
+            type: "gig",
+          }}
+          onPaymentSuccess={(receipt) => {
+            setProject((prev) => ({
+              ...prev,
+              paymentStatus: "paid",
+              status: "in_progress",
+              transactionId: receipt.transactionId,
+            }));
+          }}
+        />
         {/* FIVERR DIRECT ORDER / BUY GIG MODAL */}
         {showDirectBuyModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
